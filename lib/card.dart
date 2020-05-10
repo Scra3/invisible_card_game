@@ -18,7 +18,7 @@ class Card {
     final associatedColor = getAssociatedColor();
 
     // is King ?
-    if (cardValue == 13) {
+    if (cardValue == 0) {
       return Card(13, associatedColor);
     } else {
       return Card(cardValue, associatedColor);
@@ -26,11 +26,22 @@ class Card {
   }
 
   AssetImage getAssetImage() {
-    final name = buildName(_value, _color);
-    return AssetImage('images/cards/$name}');
+    String name;
+    if (_value == 13) {
+      name = buildName('k', _color);
+    } else if (_value == 12) {
+      name = buildName('Q', _color);
+    } else if (_value == 11) {
+      name = buildName('J', _color);
+    } else if (_value == 1) {
+      name = buildName('A', _color);
+    }  else {
+      name = buildName(_value.toString(), _color);
+    }
+    return AssetImage('images/cards/$name.png');
   }
 
-  String buildName(int value, String color) {
+  String buildName(String value, String color) {
     return '$value$color';
   }
 
