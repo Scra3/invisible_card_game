@@ -28,6 +28,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int _currentCardIndex = 0;
   bool _isDisplayBackCard = false;
   List<GameCard.Card> _shuffledCards = GameCard.allCards;
+  bool _isRedMode = true;
 
   @override
   void initState() {
@@ -35,13 +36,17 @@ class _MyHomePageState extends State<MyHomePage> {
     // clone
     _shuffledCards = GameCard.allCards.map((card) => card).toList();
     _shuffledCards.shuffle();
+    _shuffledCards = sortCards(_shuffledCards);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text(widget.title),
+          title: Row(children: <Widget>[
+            Text(widget.title),
+            Text(_isRedMode ? 'red' : 'white')
+          ]),
         ),
         body: Stack(
           children: <Widget>[
@@ -134,5 +139,29 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _currentCardIndex--;
     });
+  }
+
+  void toggleMode() {
+    setState(() {
+      _isRedMode = !_isRedMode;
+    });
+  }
+
+  List<GameCard.Card> sortCards(List<GameCard.Card> cards) {
+    List<GameCard.Card> sAndHCards = cards
+        .where((card) =>
+            card.color == GameCard.D_CARD || card.color == GameCard.S_CARD)
+        .toList();
+
+    List<GameCard.Card> hAndSCards = cards
+        .where((card) =>
+            card.color != GameCard.D_CARD && card.color != GameCard.S_CARD)
+        .toList();
+
+    if (_isRedMode) {
+      return new List.from(sAndHCards)..addAll(hAndSCards);
+    } else {
+      return new List.from(hAndSCards)..addAll(sAndHCards);
+    }
   }
 }

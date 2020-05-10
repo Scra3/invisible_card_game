@@ -6,15 +6,15 @@ const S_CARD = 'S';
 const H_CARD = 'H';
 
 class Card {
-  int _value;
-  String _color;
+  int value;
+  String color;
 
-  Card(this._value, this._color);
+  Card(this.value, this.color);
 
   Card getAssociatedCard() {
-    const goal_value = 13;
+    const goalvalue = 13;
 
-    final cardValue = goal_value - _value;
+    final cardValue = goalvalue - value;
     final associatedColor = getAssociatedColor();
 
     // is King ?
@@ -31,22 +31,22 @@ class Card {
 
   AssetImage getAssetImage() {
     String name;
-    if (_value == 13) {
-      name = buildName('K', _color);
-    } else if (_value == 12) {
-      name = buildName('Q', _color);
-    } else if (_value == 11) {
-      name = buildName('J', _color);
-    } else if (_value == 1) {
-      name = buildName('A', _color);
+    if (value == 13) {
+      name = buildName('K', color);
+    } else if (value == 12) {
+      name = buildName('Q', color);
+    } else if (value == 11) {
+      name = buildName('J', color);
+    } else if (value == 1) {
+      name = buildName('A', color);
     }  else {
-      name = buildName(_value.toString(), _color);
+      name = buildName(value.toString(), color);
     }
     return AssetImage('images/cards/$name.png');
   }
 
   String getName() {
-    return buildName(_value.toString(), _color);
+    return buildName(value.toString(), color);
   }
 
   String buildName(String value, String color) {
@@ -54,7 +54,7 @@ class Card {
   }
 
   String getAssociatedColor() {
-    switch (_color) {
+    switch (color) {
       case C_CARD:
         {
           return D_CARD;
