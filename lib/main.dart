@@ -36,7 +36,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // clone
     _shuffledCards = GameCard.allCards.map((card) => card).toList();
     _shuffledCards.shuffle();
-    _shuffledCards = sortCards(_shuffledCards);
+    _shuffledCards = sortCards(_shuffledCards, _isRedMode);
   }
 
   @override
@@ -45,51 +45,54 @@ class _MyHomePageState extends State<MyHomePage> {
         appBar: AppBar(
           title: Row(children: <Widget>[
             Text(widget.title),
-            Text(_isRedMode ? 'red' : 'white')
+            Text(_isRedMode ? '.' : '')
           ]),
         ),
-        body: Stack(
-          children: <Widget>[
-            Container(
-                width: MediaQuery.of(context).size.width,
-                child: buildImageWidget()),
-            Positioned(
-              right: 50,
-              child: SwipeDetector(
-                  onDoubleTap: () => displayFontOfBackCard(),
-                  onSwipe: (move) {
-                    if (move.move == Move.LEFT) {
-                      nextCard();
-                      displayFontOfBackCard();
-                    } else if (move.move == Move.RIGHT) {
-                      previousCard();
-                      displayFontOfBackCard();
-                    }
-                  },
-                  child: Container(
-                    height: MediaQuery.of(context).size.height,
-                    width: MediaQuery.of(context).size.width,
-                    color: Colors.transparent,
-                  )),
-            ),
-            Positioned(
-              right: 0,
-              width: 50,
-              child: SwipeDetector(
-                  onDoubleTap: () => displayFontOfBackCard(),
-                  onSwipe: (move) {
-                    if (move.move == Move.LEFT) {
-                      nextCard();
-                      displayBackAssociatedCard();
-                    }
-                  },
-                  child: Container(
-                    height: MediaQuery.of(context).size.height,
-                    color: Colors.transparent,
-                  )),
-            )
-          ],
-        ));
+        body: Center(
+            child: Container(
+                width: MediaQuery.of(context).size.width / 1.3,
+                child: Stack(
+                  children: <Widget>[
+                    Container(
+                        width: MediaQuery.of(context).size.width,
+                        child: buildImageWidget()),
+                    Positioned(
+                      right: 50,
+                      child: SwipeDetector(
+                          onDoubleTap: () => displayFrontOfBackCard(),
+                          onLongPress: () => toggleMode(),
+                          onSwipe: (move) {
+                            if (move.move == Move.LEFT) {
+                              nextCard();
+                            } else if (move.move == Move.RIGHT) {
+                              previousCard();
+                            }
+                          },
+                          child: Container(
+                            height: MediaQuery.of(context).size.height,
+                            width: MediaQuery.of(context).size.width,
+                            color: Colors.transparent,
+                          )),
+                    ),
+                    Positioned(
+                      right: 0,
+                      width: 50,
+                      child: SwipeDetector(
+                          onLongPress: () => toggleMode(),
+                          onDoubleTap: () => displayFrontOfBackCard(),
+                          onSwipe: (move) {
+                            if (move.move == Move.LEFT) {
+                              nextCard();
+                              displayBackAssociatedCard();
+                            }
+                          },
+                          child: Container(
+                            height: MediaQuery.of(context).size.height,
+                            color: Colors.transparent,
+                          )),
+                    )
+                  ],
+                ))));
   }
 
   Widget buildImageWidget() {
@@ -102,10 +105,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void displayBackAssociatedCard() {
+    final index = _currentCardIndex - 1 <= 0 ? 0 : _currentCardIndex - 1;
     final GameCard.Card cardToSwitch = _shuffledCards[_currentCardIndex];
     final int associatedCardIndexFromDeck = _shuffledCards.indexWhere((card) =>
-        card.getName() ==
-        _shuffledCards[_currentCardIndex - 1].getAssociatedCard().getName());
+        card.getName() == _shuffledCards[index].getAssociatedCard().getName());
 
     setState(() {
       _shuffledCards[_currentCardIndex] =
@@ -115,14 +118,15 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void displayFontOfBackCard() {
+  void displayFrontOfBackCard() {
     setState(() {
       _isDisplayBackCard = false;
     });
   }
 
   void nextCard() {
-    if (_currentCardIndex == GameCard.allCards.length - 1) {
+    if (_currentCardIndex == GameCard.allCards.length - 1 ||
+        _isDisplayBackCard) {
       return;
     }
 
@@ -132,7 +136,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void previousCard() {
-    if (_currentCardIndex == 0) {
+    if (_currentCardIndex == 0 || _isDisplayBackCard) {
       return;
     }
 
@@ -144,10 +148,12 @@ class _MyHomePageState extends State<MyHomePage> {
   void toggleMode() {
     setState(() {
       _isRedMode = !_isRedMode;
+      _shuffledCards = sortCards(_shuffledCards, _isRedMode);
+      _currentCardIndex = 0;
     });
   }
 
-  List<GameCard.Card> sortCards(List<GameCard.Card> cards) {
+  List<GameCard.Card> sortCards(List<GameCard.Card> cards, isRedMode) {
     List<GameCard.Card> sAndHCards = cards
         .where((card) =>
             card.color == GameCard.D_CARD || card.color == GameCard.S_CARD)
@@ -158,7 +164,7 @@ class _MyHomePageState extends State<MyHomePage> {
             card.color != GameCard.D_CARD && card.color != GameCard.S_CARD)
         .toList();
 
-    if (_isRedMode) {
+    if (isRedMode) {
       return new List.from(sAndHCards)..addAll(hAndSCards);
     } else {
       return new List.from(hAndSCards)..addAll(sAndHCards);
