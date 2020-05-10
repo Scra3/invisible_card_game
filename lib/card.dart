@@ -25,10 +25,14 @@ class Card {
     }
   }
 
+  AssetImage getBackAssetImage() {
+    return AssetImage('images/cards/gray_back.png');
+  }
+
   AssetImage getAssetImage() {
     String name;
     if (_value == 13) {
-      name = buildName('k', _color);
+      name = buildName('K', _color);
     } else if (_value == 12) {
       name = buildName('Q', _color);
     } else if (_value == 11) {
@@ -39,6 +43,10 @@ class Card {
       name = buildName(_value.toString(), _color);
     }
     return AssetImage('images/cards/$name.png');
+  }
+
+  String getName() {
+    return buildName(_value.toString(), _color);
   }
 
   String buildName(String value, String color) {

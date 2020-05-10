@@ -5,8 +5,13 @@ class SwipeDetector extends StatefulWidget {
   final Widget child;
 
   final Function(SwipeMove) onSwipe;
+  final Function() onDoubleTap;
 
-  SwipeDetector({Key key, @required this.child, @required this.onSwipe})
+  SwipeDetector(
+      {Key key,
+      @required this.child,
+      @required this.onSwipe,
+      @required this.onDoubleTap})
       : super(key: key);
 
   _SwipeDetectorState createState() => _SwipeDetectorState();
@@ -30,6 +35,7 @@ class _SwipeDetectorState extends State<SwipeDetector> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      onDoubleTap: () => widget.onDoubleTap(),
       onPanStart: (gesture) {
         RenderBox object = context.findRenderObject();
         Offset _localPosition = object.globalToLocal(gesture.globalPosition);
