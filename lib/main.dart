@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:invisiblecardgame/card.dart' as GameCard;
 import 'package:invisiblecardgame/swipe_move.dart';
@@ -29,6 +31,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _isDisplayBackCard = false;
   List<GameCard.Card> _shuffledCards = GameCard.allCards;
   bool _isRedMode = true;
+  bool _cardIsChanging = true;
 
   @override
   void initState() {
@@ -99,8 +102,25 @@ class _MyHomePageState extends State<MyHomePage> {
     if (_isDisplayBackCard) {
       return Image(
           image: _shuffledCards[_currentCardIndex].getBackAssetImage());
+    } else if (_currentCardIndex == 0 ||
+        _currentCardIndex == GameCard.allCards.length - 1) {
+      return Stack(
+        children: <Widget>[
+          Image(image: AssetImage('images/cards/yellow_back.png')),
+          Positioned(
+              top: 200,
+              left: 100,
+              child: Text('End of deck',
+                  style: TextStyle(
+                      color: Colors.black, fontWeight: FontWeight.bold)))
+        ],
+      );
     } else {
-      return Image(image: _shuffledCards[_currentCardIndex].getAssetImage());
+      return AnimatedOpacity(
+          opacity: _cardIsChanging ? 0 : 1,
+          duration: Duration(milliseconds: 500),
+          child:
+              Image(image: _shuffledCards[_currentCardIndex].getAssetImage()));
     }
   }
 
@@ -131,7 +151,9 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     setState(() {
+      _cardIsChanging = true;
       _currentCardIndex++;
+      _cardIsChanging = false;
     });
   }
 
@@ -141,7 +163,9 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     setState(() {
+      _cardIsChanging = true;
       _currentCardIndex--;
+      _cardIsChanging = false;
     });
   }
 
