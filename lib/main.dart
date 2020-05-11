@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:invisiblecardgame/card.dart' as GameCard;
 import 'package:invisiblecardgame/swipe_move.dart';
@@ -28,18 +26,31 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _currentCardIndex = 0;
-  bool _isDisplayBackCard = false;
+  bool _isCardFound = false;
+  bool _isCardFoundDisplayed = false;
   List<GameCard.Card> _shuffledCards = GameCard.allCards;
+  List<GameCard.Card> _associatedCards = GameCard.allCards;
   bool _isRedMode = true;
   bool _cardIsChanging = true;
 
   @override
   void initState() {
     super.initState();
-    // clone
-    _shuffledCards = GameCard.allCards.map((card) => card).toList();
-    _shuffledCards.shuffle();
-    _shuffledCards = sortCards(_shuffledCards, _isRedMode);
+    setupStates(true);
+  }
+
+  void setupStates(bool isRedMode) {
+    setState(() {
+      _currentCardIndex = 0;
+      _isCardFound = false;
+      _isCardFoundDisplayed = false;
+      _isRedMode = isRedMode;
+      _cardIsChanging = true;
+
+      _shuffledCards = getDeckFirstPart(GameCard.allCards, _isRedMode);
+      _shuffledCards.shuffle();
+      _associatedCards = getDeckSecondPart(GameCard.allCards, _isRedMode);
+    });
   }
 
   @override
@@ -51,114 +62,116 @@ class _MyHomePageState extends State<MyHomePage> {
             Text(_isRedMode ? '.' : '')
           ]),
         ),
-        body: Center(
-            child: Container(
-                width: MediaQuery.of(context).size.width / 1.3,
-                child: Stack(
-                  children: <Widget>[
-                    Container(
-                        width: MediaQuery.of(context).size.width,
-                        child: buildImageWidget()),
-                    Positioned(
-                      right: 50,
-                      child: SwipeDetector(
-                          onDoubleTap: () => displayFrontOfBackCard(),
-                          onLongPress: () => toggleMode(),
-                          onSwipe: (move) {
-                            if (move.move == Move.LEFT) {
-                              nextCard();
-                            } else if (move.move == Move.RIGHT) {
-                              previousCard();
-                            }
-                          },
-                          child: Container(
-                            height: MediaQuery.of(context).size.height,
-                            width: MediaQuery.of(context).size.width,
-                            color: Colors.transparent,
-                          )),
-                    ),
-                    Positioned(
-                      right: 0,
-                      width: 50,
-                      child: SwipeDetector(
-                          onLongPress: () => toggleMode(),
-                          onDoubleTap: () => displayFrontOfBackCard(),
-                          onSwipe: (move) {
-                            if (move.move == Move.LEFT) {
-                              nextCard();
-                              displayBackAssociatedCard();
-                            }
-                          },
-                          child: Container(
-                            height: MediaQuery.of(context).size.height,
-                            color: Colors.transparent,
-                          )),
-                    )
-                  ],
-                ))));
+        body: Stack(children: <Widget>[
+          Center(
+              child: Container(
+                  width: MediaQuery.of(context).size.width / 1.3,
+                  child: Stack(
+                    children: <Widget>[
+                      Container(
+                          width: MediaQuery.of(context).size.width,
+                          child: buildImageWidget()),
+                      Positioned(
+                        right: 50,
+                        child: SwipeDetector(
+                            onDoubleTap: () => displayFoundCard(),
+                            onLongPress: () => toggleMode(),
+                            onSwipe: (move) {
+                              if (move.move == Move.LEFT) {
+                                nextCard();
+                              } else if (move.move == Move.RIGHT) {
+                                previousCard();
+                              }
+                            },
+                            child: Container(
+                              height: MediaQuery.of(context).size.height,
+                              width: MediaQuery.of(context).size.width,
+                              color: Colors.transparent,
+                            )),
+                      ),
+                      Positioned(
+                        right: 0,
+                        width: 50,
+                        child: SwipeDetector(
+                            onLongPress: () => toggleMode(),
+                            onDoubleTap: () => displayFoundCard(),
+                            onSwipe: (move) {
+                              if (move.move == Move.LEFT) {
+                                displayAssociatedBackCard();
+                              }
+                            },
+                            child: Container(
+                              height: MediaQuery.of(context).size.height,
+                              color: Colors.transparent,
+                            )),
+                      ),
+                    ],
+                  ))),
+          RaisedButton(
+            onPressed: () => setupStates(_isRedMode),
+            textColor: Colors.white,
+            child: const Text('Shuffle', style: TextStyle(fontSize: 20)),
+          ),
+        ]));
   }
 
   Widget buildImageWidget() {
-    if (_isDisplayBackCard) {
+    if (_isCardFound && !_isCardFoundDisplayed) {
       return Image(
           image: _shuffledCards[_currentCardIndex].getBackAssetImage());
-    } else if (_currentCardIndex == 0 ||
-        _currentCardIndex == GameCard.allCards.length - 1) {
-      return Stack(
-        children: <Widget>[
-          Image(image: AssetImage('images/cards/yellow_back.png')),
-          Positioned(
-              top: 200,
-              left: 100,
-              child: Text('End of deck',
-                  style: TextStyle(
-                      color: Colors.black, fontWeight: FontWeight.bold)))
-        ],
-      );
     } else {
-      return AnimatedOpacity(
-          opacity: _cardIsChanging ? 0 : 1,
-          duration: Duration(milliseconds: 500),
-          child:
-              Image(image: _shuffledCards[_currentCardIndex].getAssetImage()));
+      return Image(image: _shuffledCards[_currentCardIndex].getAssetImage());
     }
   }
 
-  void displayBackAssociatedCard() {
-    final index = _currentCardIndex - 1 <= 0 ? 0 : _currentCardIndex - 1;
-    final GameCard.Card cardToSwitch = _shuffledCards[_currentCardIndex];
-    final int associatedCardIndexFromDeck = _shuffledCards.indexWhere((card) =>
-        card.getName() == _shuffledCards[index].getAssociatedCard().getName());
+  void displayAssociatedBackCard() {
+    final String associatedCardName =
+        _shuffledCards[_currentCardIndex].getAssociatedCard().getName();
+    final GameCard.Card associatedCard = _associatedCards
+        .firstWhere((card) => card.getName() == associatedCardName);
 
     setState(() {
-      _shuffledCards[_currentCardIndex] =
-          _shuffledCards[associatedCardIndexFromDeck];
-      _shuffledCards[associatedCardIndexFromDeck] = cardToSwitch;
-      _isDisplayBackCard = true;
+      _shuffledCards[_currentCardIndex] = associatedCard;
+      _isCardFound = true;
     });
   }
 
-  void displayFrontOfBackCard() {
+  void displayFoundCard() {
     setState(() {
-      _isDisplayBackCard = false;
+      _isCardFoundDisplayed = true;
     });
   }
 
   void nextCard() {
-    if (_currentCardIndex == GameCard.allCards.length - 1 ||
-        _isDisplayBackCard) {
+    if (_currentCardIndex == GameCard.allCards.length - 1 || _isCardFound) {
       return;
     }
 
+    // if next card is called it means that the associated card is not the the predicted card.
+    // So, we can add it randomly in the first part of the deck between currentIndex + 1 and end of the first part.
+    GameCard.Card currentCard = _shuffledCards[_currentCardIndex];
+    GameCard.Card associatedCard = currentCard.getAssociatedCard();
+
+    List<GameCard.Card> nextShuffledDeck =
+        _shuffledCards.getRange(0, _currentCardIndex + 1).toList();
+    List<GameCard.Card> cardRemainToBeSeen = _shuffledCards
+        .getRange(_currentCardIndex, _shuffledCards.length)
+        .toList();
+
+    cardRemainToBeSeen.add(associatedCard);
+    cardRemainToBeSeen.shuffle();
+    nextShuffledDeck.addAll(cardRemainToBeSeen);
+
     setState(() {
       _cardIsChanging = true;
+      _shuffledCards = nextShuffledDeck;
       _currentCardIndex++;
       _cardIsChanging = false;
     });
   }
 
   void previousCard() {
-    if (_currentCardIndex == 0 || _isDisplayBackCard) {
+    if (_currentCardIndex == 0 || _isCardFound) {
       return;
     }
 
@@ -170,28 +183,24 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void toggleMode() {
-    setState(() {
-      _isRedMode = !_isRedMode;
-      _shuffledCards = sortCards(_shuffledCards, _isRedMode);
-      _currentCardIndex = 0;
-    });
+    setupStates(!_isRedMode);
   }
 
-  List<GameCard.Card> sortCards(List<GameCard.Card> cards, isRedMode) {
-    List<GameCard.Card> sAndHCards = cards
-        .where((card) =>
-            card.color == GameCard.D_CARD || card.color == GameCard.S_CARD)
-        .toList();
-
-    List<GameCard.Card> hAndSCards = cards
-        .where((card) =>
-            card.color != GameCard.D_CARD && card.color != GameCard.S_CARD)
-        .toList();
-
+  List<GameCard.Card> getDeckFirstPart(List<GameCard.Card> cards, isRedMode) {
     if (isRedMode) {
-      return new List.from(sAndHCards)..addAll(hAndSCards);
+      return cards
+          .where((card) =>
+              card.color == GameCard.D_CARD || card.color == GameCard.S_CARD)
+          .toList();
     } else {
-      return new List.from(hAndSCards)..addAll(sAndHCards);
+      return cards
+          .where((card) =>
+              card.color == GameCard.C_CARD || card.color == GameCard.H_CARD)
+          .toList();
     }
+  }
+
+  List<GameCard.Card> getDeckSecondPart(List<GameCard.Card> cards, isRedMode) {
+    return getDeckFirstPart(cards, !isRedMode);
   }
 }
