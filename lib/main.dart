@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:invisiblecardgame/card.dart' as GameCard;
-import 'package:invisiblecardgame/swipe_move.dart';
-import 'package:invisiblecardgame/widgets/swipe_detector_widget.dart';
 
 void main() => runApp(MyApp());
 
@@ -25,31 +23,35 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _currentCardIndex = 0;
   List<GameCard.Card> _shuffledCards = GameCard.allCards;
+  List<GameCard.Card> _associatedCards = GameCard.allCards;
   bool _isPairMode = true;
   bool _nextCardIsAssociatedCardOfCurrentCard = false;
   bool _isCardIsRevealed = false;
+  bool _isDraggingAnimationEnded = true;
 
   @override
   void initState() {
     super.initState();
-    setupStates(true);
+    setupStates(false);
   }
 
   void setupStates(bool isPairMode) {
     setState(() {
-      _currentCardIndex = 0;
       _isPairMode = isPairMode;
       _nextCardIsAssociatedCardOfCurrentCard = false;
+      _associatedCards = getAssociatedCards(GameCard.allCards, _isPairMode);
       _isCardIsRevealed = false;
-      _shuffledCards = getDeckFirstPart(GameCard.allCards, _isPairMode);
+      _isDraggingAnimationEnded = true;
+      _shuffledCards = getDeck(GameCard.allCards, _isPairMode);
       _shuffledCards.shuffle();
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final double cardWidth = MediaQuery.of(context).size.width * 0.8;
+
     return Scaffold(
         appBar: AppBar(
           title: Row(children: <Widget>[
@@ -58,31 +60,67 @@ class _MyHomePageState extends State<MyHomePage> {
           ]),
         ),
         body: Center(
-            child: GestureDetector(
-                onDoubleTap: () => revealCard(),
-                onVerticalDragDown: (DragDownDetails details) {
-                  defineTypeOfNextCart(details.globalPosition);
-                },
-                child: Draggable(
-                    child: Container(
-                      child: getCurrentCard(),
-                      width: MediaQuery.of(context).size.width * 0.8,
-                    ),
-                    feedback: Container(
-                      child: Container(
-                          child: getCurrentCardFeedback(),
-                          width: MediaQuery.of(context).size.width * 0.8),
-                    ),
-                    childWhenDragging: Container(
-                      child: Container(
-                        child: getNextCard(),
-                        width: MediaQuery.of(context).size.width * 0.8,
-                      ),
-                    ),
-                    onDragCompleted: () {},
-                    onDragEnd: (drag) {
-                      nextCurrentCard();
-                    }))));
+          child: Container(
+              height: MediaQuery.of(context).size.height,
+              child: Stack(children: <Widget>[
+                ...generateDeckCardsForElevationEffect(cardWidth),
+                build2(cardWidth)
+              ])),
+        ));
+  }
+
+  Widget build2(double cardWith) {
+    if (_shuffledCards.length == 1) {
+      return Container(child: getCurrentCard(), width: cardWith);
+    } else if (_nextCardIsAssociatedCardOfCurrentCard) {
+      return GestureDetector(
+        onDoubleTap: () => revealCard(),
+        child: Container(child: getCurrentCard(), width: cardWith),
+      );
+    } else {
+      return GestureDetector(
+          onVerticalDragDown: (DragDownDetails details) {
+            defineTypeOfNextCart(details.globalPosition);
+          },
+          child: Draggable(
+              child: Container(
+                child: getCurrentCard(),
+                width: cardWith,
+              ),
+              feedback: Container(
+                child: getCurrentCardFeedback(),
+                width: cardWith,
+              ),
+              childWhenDragging: Container(
+                child: Container(
+                  child: getNextCard(),
+                  width: cardWith,
+                ),
+              ),
+              onDragEnd: (drag) {
+                removeCurrentCard();
+                generateNextCard();
+              }));
+    }
+  }
+
+  void removeCurrentCard() {
+    _shuffledCards.removeAt(0);
+    setState(() {
+      _shuffledCards = _shuffledCards;
+    });
+  }
+
+  List<Widget> generateDeckCardsForElevationEffect(double cardWidth) {
+    return [5.0, 10.0, 15.0, 20.0, 25.0]
+        .reversed
+        .map((top) => Positioned(
+            top: top,
+            child: Container(
+              child: Image(image: AssetImage('images/cards/white_card.png')),
+              width: cardWidth,
+            )))
+        .toList();
   }
 
   void defineTypeOfNextCart(Offset globalPosition) {
@@ -104,11 +142,9 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget getCurrentCardFeedback() {
     if (_nextCardIsAssociatedCardOfCurrentCard) {
       return Image(
-          image: _shuffledCards[_currentCardIndex]
-              .getAssociatedCard()
-              .getBackAssetImage());
+          image: _shuffledCards[0].getAssociatedCard().getBackAssetImage());
     } else {
-      return Image(image: _shuffledCards[_currentCardIndex].getAssetImage());
+      return Image(image: _shuffledCards[0].getAssetImage());
     }
   }
 
@@ -116,66 +152,55 @@ class _MyHomePageState extends State<MyHomePage> {
     if (_nextCardIsAssociatedCardOfCurrentCard) {
       if (_isCardIsRevealed) {
         return Image(
-            image: _shuffledCards[_currentCardIndex]
-                .getAssociatedCard()
-                .getAssetImage());
+            image: _shuffledCards[0].getAssociatedCard().getAssetImage());
       } else {
         return Image(
-            image: _shuffledCards[_currentCardIndex]
-                .getAssociatedCard()
-                .getBackAssetImage());
+            image: _shuffledCards[0].getAssociatedCard().getBackAssetImage());
       }
     } else {
-      return Image(image: _shuffledCards[_currentCardIndex].getAssetImage());
+      return Image(image: _shuffledCards[0].getAssetImage());
     }
   }
 
   Widget getNextCard() {
     if (_nextCardIsAssociatedCardOfCurrentCard) {
       return Image(
-          image: _shuffledCards[_currentCardIndex]
-              .getAssociatedCard()
-              .getBackAssetImage());
+          image: _shuffledCards[0].getAssociatedCard().getBackAssetImage());
     } else {
-      generateNextCard();
-      return Image(
-          image: _shuffledCards[_currentCardIndex + 1].getAssetImage());
+      return Image(image: _shuffledCards[1].getAssetImage());
     }
-  }
-
-  void nextCurrentCard() {
-    if (_nextCardIsAssociatedCardOfCurrentCard) {
-      return;
-    }
-
-    setState(() {
-      _currentCardIndex++;
-    });
   }
 
   void generateNextCard() {
-    if (_currentCardIndex == GameCard.allCards.length - 1 ||
-        _nextCardIsAssociatedCardOfCurrentCard) {
+    if (_nextCardIsAssociatedCardOfCurrentCard) {
       return;
     }
 
     // if next card is called it means that the associated card is not the the predicted card.
     // So, we can add it randomly in the first part of the deck between currentIndex + 1 and end of the first part.
-    GameCard.Card currentCard = _shuffledCards[_currentCardIndex];
-    GameCard.Card associatedCard = currentCard.getAssociatedCard();
+    List<GameCard.Card> newShuffledCards = [_shuffledCards.first];
 
-    List<GameCard.Card> nextShuffledDeck =
-        _shuffledCards.getRange(0, _currentCardIndex + 1).toList();
-    List<GameCard.Card> cardRemainToBeSeen = _shuffledCards
-        .getRange(_currentCardIndex, _shuffledCards.length)
-        .toList();
+    List<GameCard.Card> cardRemainToBeSeen =
+        _shuffledCards.getRange(1, _shuffledCards.length).toList();
+    GameCard.Card associatedCard = _associatedCards.firstWhere(
+        (card) =>
+            card.getName() ==
+            _shuffledCards.first.getAssociatedCard().getName(),
+        orElse: () => null);
 
-    cardRemainToBeSeen.add(associatedCard);
+    if (associatedCard != null) {
+      cardRemainToBeSeen.add(associatedCard);
+      _associatedCards.removeWhere(
+        (card) =>
+            card.getName() ==
+            _shuffledCards.first.getAssociatedCard().getName(),
+      );
+    }
     cardRemainToBeSeen.shuffle();
-    nextShuffledDeck.addAll(cardRemainToBeSeen);
+    newShuffledCards.addAll(cardRemainToBeSeen);
 
     setState(() {
-      _shuffledCards = nextShuffledDeck;
+      _shuffledCards = newShuffledCards;
     });
   }
 
@@ -183,7 +208,7 @@ class _MyHomePageState extends State<MyHomePage> {
     setupStates(!_isPairMode);
   }
 
-  List<GameCard.Card> getDeckFirstPart(List<GameCard.Card> cards, isPairMode) {
+  List<GameCard.Card> getDeck(List<GameCard.Card> cards, isPairMode) {
     if (isPairMode) {
       return cards.where((card) => card.value % 2 == 0).toList();
     } else {
@@ -191,7 +216,8 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  List<GameCard.Card> getDeckSecondPart(List<GameCard.Card> cards, isPairMode) {
-    return getDeckFirstPart(cards, !isPairMode);
+  List<GameCard.Card> getAssociatedCards(
+      List<GameCard.Card> cards, isPairMode) {
+    return getDeck(cards, !isPairMode);
   }
 }
