@@ -30,7 +30,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _isCardFoundDisplayed = false;
   List<GameCard.Card> _shuffledCards = GameCard.allCards;
   List<GameCard.Card> _associatedCards = GameCard.allCards;
-  bool _isRedMode = true;
+  bool _isPairMode = true;
   bool _cardIsChanging = true;
 
   @override
@@ -39,17 +39,17 @@ class _MyHomePageState extends State<MyHomePage> {
     setupStates(true);
   }
 
-  void setupStates(bool isRedMode) {
+  void setupStates(bool isPairMode) {
     setState(() {
       _currentCardIndex = 0;
       _isCardFound = false;
       _isCardFoundDisplayed = false;
-      _isRedMode = isRedMode;
+      _isPairMode = isPairMode;
       _cardIsChanging = true;
 
-      _shuffledCards = getDeckFirstPart(GameCard.allCards, _isRedMode);
+      _shuffledCards = getDeckFirstPart(GameCard.allCards, _isPairMode);
       _shuffledCards.shuffle();
-      _associatedCards = getDeckSecondPart(GameCard.allCards, _isRedMode);
+      _associatedCards = getDeckSecondPart(GameCard.allCards, _isPairMode);
     });
   }
 
@@ -59,7 +59,7 @@ class _MyHomePageState extends State<MyHomePage> {
         appBar: AppBar(
           title: Row(children: <Widget>[
             Text(widget.title),
-            Text(_isRedMode ? '.' : '')
+            Text(_isPairMode ? '' : '.')
           ]),
         ),
         body: Stack(children: <Widget>[
@@ -108,7 +108,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ],
                   ))),
           RaisedButton(
-            onPressed: () => setupStates(_isRedMode),
+            onPressed: () => setupStates(_isPairMode),
             textColor: Colors.white,
             child: const Text('Shuffle', style: TextStyle(fontSize: 20)),
           ),
@@ -183,24 +183,18 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void toggleMode() {
-    setupStates(!_isRedMode);
+    setupStates(!_isPairMode);
   }
 
-  List<GameCard.Card> getDeckFirstPart(List<GameCard.Card> cards, isRedMode) {
-    if (isRedMode) {
-      return cards
-          .where((card) =>
-              card.color == GameCard.D_CARD || card.color == GameCard.S_CARD)
-          .toList();
+  List<GameCard.Card> getDeckFirstPart(List<GameCard.Card> cards, isPairMode) {
+    if (isPairMode) {
+      return cards.where((card) => card.value % 2 == 0).toList();
     } else {
-      return cards
-          .where((card) =>
-              card.color == GameCard.C_CARD || card.color == GameCard.H_CARD)
-          .toList();
+      return cards.where((card) => card.value % 2 != 0).toList();
     }
   }
 
-  List<GameCard.Card> getDeckSecondPart(List<GameCard.Card> cards, isRedMode) {
-    return getDeckFirstPart(cards, !isRedMode);
+  List<GameCard.Card> getDeckSecondPart(List<GameCard.Card> cards, isPairMode) {
+    return getDeckFirstPart(cards, !isPairMode);
   }
 }
