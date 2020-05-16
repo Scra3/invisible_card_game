@@ -26,12 +26,10 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _currentCardIndex = 0;
-  bool _isCardFound = false;
-  bool _isCardFoundDisplayed = false;
   List<GameCard.Card> _shuffledCards = GameCard.allCards;
-  List<GameCard.Card> _associatedCards = GameCard.allCards;
   bool _isPairMode = true;
-  bool _cardIsChanging = true;
+  bool _nextCardIsAssociatedCardOfCurrentCard = false;
+  bool _isCardIsRevealed = false;
 
   @override
   void initState() {
@@ -42,14 +40,11 @@ class _MyHomePageState extends State<MyHomePage> {
   void setupStates(bool isPairMode) {
     setState(() {
       _currentCardIndex = 0;
-      _isCardFound = false;
-      _isCardFoundDisplayed = false;
       _isPairMode = isPairMode;
-      _cardIsChanging = true;
-
+      _nextCardIsAssociatedCardOfCurrentCard = false;
+      _isCardIsRevealed = false;
       _shuffledCards = getDeckFirstPart(GameCard.allCards, _isPairMode);
       _shuffledCards.shuffle();
-      _associatedCards = getDeckSecondPart(GameCard.allCards, _isPairMode);
     });
   }
 
@@ -62,88 +57,105 @@ class _MyHomePageState extends State<MyHomePage> {
             Text(_isPairMode ? '' : '.')
           ]),
         ),
-        body: Stack(children: <Widget>[
-          Center(
-              child: Container(
-                  width: MediaQuery.of(context).size.width / 1.3,
-                  child: Stack(
-                    children: <Widget>[
-                      Container(
-                          width: MediaQuery.of(context).size.width,
-                          child: buildImageWidget()),
-                      Positioned(
-                        right: 50,
-                        child: SwipeDetector(
-                            onDoubleTap: () => displayFoundCard(),
-                            onLongPress: () => toggleMode(),
-                            onSwipe: (move) {
-                              if (move.move == Move.LEFT) {
-                                nextCard();
-                              } else if (move.move == Move.RIGHT) {
-                                previousCard();
-                              }
-                            },
-                            child: Container(
-                              height: MediaQuery.of(context).size.height,
-                              width: MediaQuery.of(context).size.width,
-                              color: Colors.transparent,
-                            )),
+        body: Center(
+            child: GestureDetector(
+                onDoubleTap: () => revealCard(),
+                onVerticalDragDown: (DragDownDetails details) {
+                  defineTypeOfNextCart(details.globalPosition);
+                },
+                child: Draggable(
+                    child: Container(
+                      child: getCurrentCard(),
+                      width: MediaQuery.of(context).size.width * 0.8,
+                    ),
+                    feedback: Container(
+                      child: Container(
+                          child: getCurrentCardFeedback(),
+                          width: MediaQuery.of(context).size.width * 0.8),
+                    ),
+                    childWhenDragging: Container(
+                      child: Container(
+                        child: getNextCard(),
+                        width: MediaQuery.of(context).size.width * 0.8,
                       ),
-                      Positioned(
-                        right: 0,
-                        width: 50,
-                        child: SwipeDetector(
-                            onLongPress: () => toggleMode(),
-                            onDoubleTap: () => displayFoundCard(),
-                            onSwipe: (move) {
-                              if (move.move == Move.LEFT) {
-                                displayAssociatedBackCard();
-                              }
-                            },
-                            child: Container(
-                              height: MediaQuery.of(context).size.height,
-                              color: Colors.transparent,
-                            )),
-                      ),
-                    ],
-                  ))),
-          RaisedButton(
-            onPressed: () => setupStates(_isPairMode),
-            textColor: Colors.white,
-            child: const Text('Shuffle', style: TextStyle(fontSize: 20)),
-          ),
-        ]));
+                    ),
+                    onDragCompleted: () {},
+                    onDragEnd: (drag) {
+                      nextCurrentCard();
+                    }))));
   }
 
-  Widget buildImageWidget() {
-    if (_isCardFound && !_isCardFoundDisplayed) {
+  void defineTypeOfNextCart(Offset globalPosition) {
+    if (globalPosition.dx < 250 || _nextCardIsAssociatedCardOfCurrentCard) {
+      return;
+    }
+
+    setState(() {
+      _nextCardIsAssociatedCardOfCurrentCard = true;
+    });
+  }
+
+  void revealCard() {
+    setState(() {
+      _isCardIsRevealed = true;
+    });
+  }
+
+  Widget getCurrentCardFeedback() {
+    if (_nextCardIsAssociatedCardOfCurrentCard) {
       return Image(
-          image: _shuffledCards[_currentCardIndex].getBackAssetImage());
+          image: _shuffledCards[_currentCardIndex]
+              .getAssociatedCard()
+              .getBackAssetImage());
     } else {
       return Image(image: _shuffledCards[_currentCardIndex].getAssetImage());
     }
   }
 
-  void displayAssociatedBackCard() {
-    final String associatedCardName =
-        _shuffledCards[_currentCardIndex].getAssociatedCard().getName();
-    final GameCard.Card associatedCard = _associatedCards
-        .firstWhere((card) => card.getName() == associatedCardName);
+  Widget getCurrentCard() {
+    if (_nextCardIsAssociatedCardOfCurrentCard) {
+      if (_isCardIsRevealed) {
+        return Image(
+            image: _shuffledCards[_currentCardIndex]
+                .getAssociatedCard()
+                .getAssetImage());
+      } else {
+        return Image(
+            image: _shuffledCards[_currentCardIndex]
+                .getAssociatedCard()
+                .getBackAssetImage());
+      }
+    } else {
+      return Image(image: _shuffledCards[_currentCardIndex].getAssetImage());
+    }
+  }
+
+  Widget getNextCard() {
+    if (_nextCardIsAssociatedCardOfCurrentCard) {
+      return Image(
+          image: _shuffledCards[_currentCardIndex]
+              .getAssociatedCard()
+              .getBackAssetImage());
+    } else {
+      generateNextCard();
+      return Image(
+          image: _shuffledCards[_currentCardIndex + 1].getAssetImage());
+    }
+  }
+
+  void nextCurrentCard() {
+    if (_nextCardIsAssociatedCardOfCurrentCard) {
+      return;
+    }
 
     setState(() {
-      _shuffledCards[_currentCardIndex] = associatedCard;
-      _isCardFound = true;
+      _currentCardIndex++;
     });
   }
 
-  void displayFoundCard() {
-    setState(() {
-      _isCardFoundDisplayed = true;
-    });
-  }
-
-  void nextCard() {
-    if (_currentCardIndex == GameCard.allCards.length - 1 || _isCardFound) {
+  void generateNextCard() {
+    if (_currentCardIndex == GameCard.allCards.length - 1 ||
+        _nextCardIsAssociatedCardOfCurrentCard) {
       return;
     }
 
@@ -163,22 +175,7 @@ class _MyHomePageState extends State<MyHomePage> {
     nextShuffledDeck.addAll(cardRemainToBeSeen);
 
     setState(() {
-      _cardIsChanging = true;
       _shuffledCards = nextShuffledDeck;
-      _currentCardIndex++;
-      _cardIsChanging = false;
-    });
-  }
-
-  void previousCard() {
-    if (_currentCardIndex == 0 || _isCardFound) {
-      return;
-    }
-
-    setState(() {
-      _cardIsChanging = true;
-      _currentCardIndex--;
-      _cardIsChanging = false;
     });
   }
 
