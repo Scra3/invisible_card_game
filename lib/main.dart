@@ -28,12 +28,11 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _isPairMode = true;
   bool _nextCardIsAssociatedCardOfCurrentCard = false;
   bool _isCardIsRevealed = false;
-  bool _isDraggingAnimationEnded = true;
 
   @override
   void initState() {
     super.initState();
-    setupStates(false);
+    setupStates(true);
   }
 
   void setupStates(bool isPairMode) {
@@ -42,7 +41,6 @@ class _MyHomePageState extends State<MyHomePage> {
       _nextCardIsAssociatedCardOfCurrentCard = false;
       _associatedCards = getAssociatedCards(GameCard.allCards, _isPairMode);
       _isCardIsRevealed = false;
-      _isDraggingAnimationEnded = true;
       _shuffledCards = getDeck(GameCard.allCards, _isPairMode);
       _shuffledCards.shuffle();
     });
@@ -64,21 +62,18 @@ class _MyHomePageState extends State<MyHomePage> {
               height: MediaQuery.of(context).size.height,
               child: Stack(children: <Widget>[
                 ...generateDeckCardsForElevationEffect(cardWidth),
-                build2(cardWidth)
+                buildDeckWidget(cardWidth)
               ])),
         ));
   }
 
-  Widget build2(double cardWith) {
+  Widget buildDeckWidget(double cardWith) {
     if (_shuffledCards.length == 1) {
       return Container(child: getCurrentCard(), width: cardWith);
-    } else if (_nextCardIsAssociatedCardOfCurrentCard) {
-      return GestureDetector(
-        onDoubleTap: () => revealCard(),
-        child: Container(child: getCurrentCard(), width: cardWith),
-      );
     } else {
       return GestureDetector(
+          onLongPress: () => toggleMode(),
+          onDoubleTap: () => revealCard(),
           onVerticalDragDown: (DragDownDetails details) {
             defineTypeOfNextCart(details.globalPosition);
           },
@@ -92,10 +87,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 width: cardWith,
               ),
               childWhenDragging: Container(
-                child: Container(
-                  child: getNextCard(),
-                  width: cardWith,
-                ),
+                child: getNextCard(),
+                width: cardWith,
               ),
               onDragEnd: (drag) {
                 removeCurrentCard();
@@ -105,6 +98,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void removeCurrentCard() {
+    if (_nextCardIsAssociatedCardOfCurrentCard) {
+      return;
+    }
+
     _shuffledCards.removeAt(0);
     setState(() {
       _shuffledCards = _shuffledCards;
@@ -140,12 +137,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget getCurrentCardFeedback() {
-    if (_nextCardIsAssociatedCardOfCurrentCard) {
-      return Image(
-          image: _shuffledCards[0].getAssociatedCard().getBackAssetImage());
-    } else {
-      return Image(image: _shuffledCards[0].getAssetImage());
-    }
+    return Image(image: _shuffledCards[0].getAssetImage());
   }
 
   Widget getCurrentCard() {
