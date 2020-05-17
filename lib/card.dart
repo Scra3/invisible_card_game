@@ -12,9 +12,9 @@ class Card {
   Card(this.value, this.color);
 
   Card getAssociatedCard() {
-    const goalvalue = 13;
+    const goalValue = 13;
 
-    final cardValue = goalvalue - value;
+    final cardValue = goalValue - value;
     final associatedColor = getAssociatedColor();
 
     // is King ?

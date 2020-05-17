@@ -27,6 +27,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<GameCard.Card> _shuffledCards = GameCard.allCards;
   List<GameCard.Card> _associatedCards = GameCard.allCards;
   bool _isPairMode = true;
+  bool _isStartedCardDisplayed = true;
   bool _isFlipCardDisplayed = false;
   bool _nextCardIsAssociatedCardOfCurrentCard = false;
 
@@ -40,6 +41,7 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _isPairMode = isPairMode;
       _nextCardIsAssociatedCardOfCurrentCard = false;
+      _isStartedCardDisplayed = true;
       _associatedCards = getAssociatedCards(GameCard.allCards, _isPairMode);
       _shuffledCards = getDeck(GameCard.allCards, _isPairMode);
       _shuffledCards.shuffle();
@@ -60,12 +62,40 @@ class _MyHomePageState extends State<MyHomePage> {
         body: Center(
           child: Container(
               height: MediaQuery.of(context).size.height,
+              width: cardWidth,
               child: Stack(children: <Widget>[
                 ...generateDeckCardsForElevationEffect(cardWidth),
                 buildDeckWidget(cardWidth),
-                displayFlipCard(cardWidth)
+                displayFlipCard(cardWidth),
+                displayFirstCardToStart(cardWidth)
               ])),
         ));
+  }
+
+  Widget displayFirstCardToStart(double cardWidth) {
+    if (!_isStartedCardDisplayed) {
+      return Container();
+    }
+
+    return GestureDetector(
+        onLongPress: () => toggleMode(),
+        child: Stack(children: <Widget>[
+          Image(image: getWhiteCardImage(), width: cardWidth),
+          Container(
+              width: cardWidth,
+              child: Center(
+                  child: RaisedButton(
+                onPressed: () {
+                  setState(() {
+                    _isStartedCardDisplayed = false;
+                  });
+                },
+                child: Text(
+                  "Start",
+                  style: TextStyle(fontSize: 20.0),
+                ),
+              )))
+        ]));
   }
 
   Widget displayFlipCard(double cardWidth) {
@@ -97,7 +127,6 @@ class _MyHomePageState extends State<MyHomePage> {
       return Container(child: getCurrentCard(), width: cardWith);
     } else {
       return GestureDetector(
-          onLongPress: () => toggleMode(),
           onVerticalDragDown: (DragDownDetails details) {
             defineTypeOfNextCart(details.globalPosition, cardWith);
           },
@@ -132,8 +161,12 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  AssetImage getWhiteCardImage() {
+    return AssetImage('images/cards/white_card.png');
+  }
+
   List<Widget> generateDeckCardsForElevationEffect(double cardWidth) {
-    AssetImage cardImage = AssetImage('images/cards/white_card.png');
+    AssetImage cardImage = getWhiteCardImage();
 
     if (_isFlipCardDisplayed) {
       cardImage = _shuffledCards[1].getAssetImage();
