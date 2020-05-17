@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:invisiblecardgame/card.dart' as GameCard;
+import 'package:flip_card/flip_card.dart';
 
 void main() => runApp(MyApp());
 
@@ -26,8 +27,8 @@ class _MyHomePageState extends State<MyHomePage> {
   List<GameCard.Card> _shuffledCards = GameCard.allCards;
   List<GameCard.Card> _associatedCards = GameCard.allCards;
   bool _isPairMode = true;
+  bool _isFlipCardDisplayed = false;
   bool _nextCardIsAssociatedCardOfCurrentCard = false;
-  bool _isCardIsRevealed = false;
 
   @override
   void initState() {
@@ -40,7 +41,6 @@ class _MyHomePageState extends State<MyHomePage> {
       _isPairMode = isPairMode;
       _nextCardIsAssociatedCardOfCurrentCard = false;
       _associatedCards = getAssociatedCards(GameCard.allCards, _isPairMode);
-      _isCardIsRevealed = false;
       _shuffledCards = getDeck(GameCard.allCards, _isPairMode);
       _shuffledCards.shuffle();
     });
@@ -62,9 +62,32 @@ class _MyHomePageState extends State<MyHomePage> {
               height: MediaQuery.of(context).size.height,
               child: Stack(children: <Widget>[
                 ...generateDeckCardsForElevationEffect(cardWidth),
-                buildDeckWidget(cardWidth)
+                buildDeckWidget(cardWidth),
+                displayFlipCard(cardWidth)
               ])),
         ));
+  }
+
+  Widget displayFlipCard(double cardWidth) {
+    // it uses to disable draggable cards
+
+    if (!_isFlipCardDisplayed) {
+      return Container(
+        width: cardWidth,
+      );
+    }
+
+    return Positioned(
+      width: cardWidth,
+      child: FlipCard(
+        direction: FlipDirection.HORIZONTAL,
+        front: Image(
+            image: _shuffledCards[0].getAssociatedCard().getBackAssetImage()),
+        back: Image(
+          image: _shuffledCards[0].getAssociatedCard().getAssetImage(),
+        ),
+      ),
+    );
   }
 
   Widget buildDeckWidget(double cardWith) {
@@ -73,9 +96,8 @@ class _MyHomePageState extends State<MyHomePage> {
     } else {
       return GestureDetector(
           onLongPress: () => toggleMode(),
-          onDoubleTap: () => revealCard(),
           onVerticalDragDown: (DragDownDetails details) {
-            defineTypeOfNextCart(details.globalPosition);
+            defineTypeOfNextCart(details.globalPosition, cardWith);
           },
           child: Draggable(
               child: Container(
@@ -91,8 +113,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 width: cardWith,
               ),
               onDragEnd: (drag) {
-                removeCurrentCard();
                 generateNextCard();
+                removeCurrentCard();
               }));
     }
   }
@@ -120,19 +142,15 @@ class _MyHomePageState extends State<MyHomePage> {
         .toList();
   }
 
-  void defineTypeOfNextCart(Offset globalPosition) {
-    if (globalPosition.dx < 250 || _nextCardIsAssociatedCardOfCurrentCard) {
+  void defineTypeOfNextCart(Offset globalPosition, double cardWith) {
+    if (globalPosition.dx < cardWith - cardWith * 0.20) {
       return;
     }
 
+    displayOverlay();
+
     setState(() {
       _nextCardIsAssociatedCardOfCurrentCard = true;
-    });
-  }
-
-  void revealCard() {
-    setState(() {
-      _isCardIsRevealed = true;
     });
   }
 
@@ -140,16 +158,14 @@ class _MyHomePageState extends State<MyHomePage> {
     return Image(image: _shuffledCards[0].getAssetImage());
   }
 
+  void displayOverlay() {
+    setState(() {
+      _isFlipCardDisplayed = true;
+    });
+  }
+
   Widget getCurrentCard() {
-    if (_nextCardIsAssociatedCardOfCurrentCard) {
-      if (_isCardIsRevealed) {
-        return Image(
-            image: _shuffledCards[0].getAssociatedCard().getAssetImage());
-      } else {
-        return Image(
-            image: _shuffledCards[0].getAssociatedCard().getBackAssetImage());
-      }
-    } else {
+    if (!_nextCardIsAssociatedCardOfCurrentCard) {
       return Image(image: _shuffledCards[0].getAssetImage());
     }
   }
@@ -170,10 +186,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // if next card is called it means that the associated card is not the the predicted card.
     // So, we can add it randomly in the first part of the deck between currentIndex + 1 and end of the first part.
-    List<GameCard.Card> newShuffledCards = [_shuffledCards.first];
+    List<GameCard.Card> newShuffledCards = [
+      _shuffledCards.first,
+      _shuffledCards[1]
+    ];
 
     List<GameCard.Card> cardRemainToBeSeen =
-        _shuffledCards.getRange(1, _shuffledCards.length).toList();
+        _shuffledCards.getRange(2, _shuffledCards.length).toList();
     GameCard.Card associatedCard = _associatedCards.firstWhere(
         (card) =>
             card.getName() ==
@@ -201,10 +220,30 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   List<GameCard.Card> getDeck(List<GameCard.Card> cards, isPairMode) {
+    final int kingValue = 13;
     if (isPairMode) {
-      return cards.where((card) => card.value % 2 == 0).toList();
+      List<GameCard.Card> redKings = [
+        GameCard.Card(kingValue, GameCard.D_CARD),
+        GameCard.Card(kingValue, GameCard.H_CARD)
+      ];
+
+      List<GameCard.Card> generatedDeck = cards
+          .where((card) => card.value % 2 == 0 && card.value != kingValue)
+          .toList();
+      generatedDeck.addAll(redKings);
+
+      return generatedDeck;
     } else {
-      return cards.where((card) => card.value % 2 != 0).toList();
+      List<GameCard.Card> blackKings = [
+        GameCard.Card(kingValue, GameCard.S_CARD),
+        GameCard.Card(kingValue, GameCard.C_CARD)
+      ];
+
+      List<GameCard.Card> generatedDeck = cards
+          .where((card) => card.value % 2 != 0 && card.value != kingValue)
+          .toList();
+      generatedDeck.addAll(blackKings);
+      return generatedDeck;
     }
   }
 
