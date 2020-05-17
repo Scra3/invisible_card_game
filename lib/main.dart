@@ -82,8 +82,10 @@ class _MyHomePageState extends State<MyHomePage> {
       child: FlipCard(
         direction: FlipDirection.HORIZONTAL,
         front: Image(
+            gaplessPlayback: true,
             image: _shuffledCards[0].getAssociatedCard().getBackAssetImage()),
         back: Image(
+          gaplessPlayback: true,
           image: _shuffledCards[0].getAssociatedCard().getAssetImage(),
         ),
       ),
@@ -131,12 +133,18 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   List<Widget> generateDeckCardsForElevationEffect(double cardWidth) {
+    AssetImage cardImage = AssetImage('images/cards/white_card.png');
+
+    if (_isFlipCardDisplayed) {
+      cardImage = _shuffledCards[1].getAssetImage();
+    }
+
     return [5.0, 10.0, 15.0, 20.0, 25.0]
         .reversed
         .map((top) => Positioned(
             top: top,
             child: Container(
-              child: Image(image: AssetImage('images/cards/white_card.png')),
+              child: Image(image: cardImage, gaplessPlayback: true),
               width: cardWidth,
             )))
         .toList();
@@ -155,7 +163,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget getCurrentCardFeedback() {
-    return Image(image: _shuffledCards[0].getAssetImage());
+    return Image(
+        image: _shuffledCards[0].getAssetImage(), gaplessPlayback: true);
   }
 
   void displayOverlay() {
@@ -165,17 +174,18 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget getCurrentCard() {
-    if (!_nextCardIsAssociatedCardOfCurrentCard) {
-      return Image(image: _shuffledCards[0].getAssetImage());
-    }
+    return Image(
+        image: _shuffledCards[0].getAssetImage(), gaplessPlayback: true);
   }
 
   Widget getNextCard() {
     if (_nextCardIsAssociatedCardOfCurrentCard) {
       return Image(
-          image: _shuffledCards[0].getAssociatedCard().getBackAssetImage());
+          image: _shuffledCards[0].getAssociatedCard().getBackAssetImage(),
+          gaplessPlayback: true);
     } else {
-      return Image(image: _shuffledCards[1].getAssetImage());
+      return Image(
+          image: _shuffledCards[1].getAssetImage(), gaplessPlayback: true);
     }
   }
 
