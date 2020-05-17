@@ -4,32 +4,35 @@ import 'package:flip_card/flip_card.dart';
 
 void main() => runApp(MyApp());
 
+const double CARD_LEFT_RATIO = 0.4;
+
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData.dark(),
-      home: MyHomePage(title: 'Deck of Cards'),
+      home: HomePage(title: 'Deck of Cards'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+class HomePage extends StatefulWidget {
+  HomePage({Key key, this.title}) : super(key: key);
 
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _HomePageState extends State<HomePage> {
   List<GameCard.Card> _shuffledCards = GameCard.allCards;
   List<GameCard.Card> _associatedCards = GameCard.allCards;
   bool _isPairMode = true;
   bool _isStartedCardDisplayed = true;
   bool _isFlipCardDisplayed = false;
   bool _nextCardIsAssociatedCardOfCurrentCard = false;
+  bool _isTutorialDisplayed = false;
 
   @override
   void initState() {
@@ -43,6 +46,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _nextCardIsAssociatedCardOfCurrentCard = false;
       _isStartedCardDisplayed = true;
       _isFlipCardDisplayed = false;
+      _isTutorialDisplayed = false;
       _associatedCards = getAssociatedCards(GameCard.allCards, _isPairMode);
       _shuffledCards = getDeck(GameCard.allCards, _isPairMode);
       _shuffledCards.shuffle();
@@ -55,31 +59,44 @@ class _MyHomePageState extends State<MyHomePage> {
 
     return Scaffold(
         appBar: AppBar(
-          title: Row(children: <Widget>[
-            Text(widget.title),
-            Text(_isPairMode ? '' : '.')
-          ]),
+          title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Row(children: <Widget>[
+                  Text(widget.title),
+                  Text(_isPairMode ? '' : '.')
+                ]),
+                IconButton(
+                  icon: Icon(Icons.help),
+                  tooltip: 'Increase volume by 10',
+                  onPressed: () {
+                    setState(() {
+                      _isTutorialDisplayed = !_isTutorialDisplayed;
+                    });
+                  },
+                ),
+              ]),
         ),
         body: Center(
             child: Container(
           height: MediaQuery.of(context).size.height,
           width: cardWidth,
           child: Stack(children: <Widget>[
-            ...generateDeckCardsForElevationEffect(cardWidth),
+            ...generateDeckCardsForElevationEffectWidget(cardWidth),
             buildDeckWidget(cardWidth),
-            displayFlipCard(cardWidth),
-            displayFirstCardToStart(cardWidth),
-            displayRestartButton(cardWidth)
+            buildFlipCardWidget(cardWidth),
+            buildFirstCardToStartWidget(cardWidth),
+            buildRestartStartButtonWidget(cardWidth),
           ]),
         )));
   }
 
-  Widget displayRestartButton(double cardWidth) {
+  Widget buildRestartStartButtonWidget(double cardWidth) {
     return Positioned(
         bottom: 0,
         width: cardWidth,
         child: RaisedButton(
-            color: Color(0XFFeb4559),
+            color: Color(0XFF30475e),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(18.0)),
             onPressed: () {
@@ -97,7 +114,7 @@ class _MyHomePageState extends State<MyHomePage> {
             )));
   }
 
-  Widget displayFirstCardToStart(double cardWidth) {
+  Widget buildFirstCardToStartWidget(double cardWidth) {
     if (!_isStartedCardDisplayed) {
       return Container();
     }
@@ -109,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget displayFlipCard(double cardWidth) {
+  Widget buildFlipCardWidget(double cardWidth) {
     // it uses to disable draggable cards
 
     if (!_isFlipCardDisplayed) {
@@ -173,7 +190,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  List<Widget> generateDeckCardsForElevationEffect(double cardWidth) {
+  List<Widget> generateDeckCardsForElevationEffectWidget(double cardWidth) {
     AssetImage cardImage = AssetImage('images/cards/white_card.png');
 
     if (_isFlipCardDisplayed) {
@@ -192,7 +209,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void defineTypeOfNextCart(Offset globalPosition, double cardWith) {
-    if (globalPosition.dx > cardWith * 0.50) {
+    if (globalPosition.dx > cardWith * CARD_LEFT_RATIO) {
       return;
     }
 
