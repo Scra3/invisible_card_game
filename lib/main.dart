@@ -42,6 +42,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _isPairMode = isPairMode;
       _nextCardIsAssociatedCardOfCurrentCard = false;
       _isStartedCardDisplayed = true;
+      _isFlipCardDisplayed = false;
       _associatedCards = getAssociatedCards(GameCard.allCards, _isPairMode);
       _shuffledCards = getDeck(GameCard.allCards, _isPairMode);
       _shuffledCards.shuffle();
@@ -66,9 +67,32 @@ class _MyHomePageState extends State<MyHomePage> {
             ...generateDeckCardsForElevationEffect(cardWidth),
             buildDeckWidget(cardWidth),
             displayFlipCard(cardWidth),
-            displayFirstCardToStart(cardWidth)
+            displayFirstCardToStart(cardWidth),
+            displayRestartButton(cardWidth)
           ]),
         )));
+  }
+
+  Widget displayRestartButton(double cardWidth) {
+    if (_isStartedCardDisplayed) {
+      return Container();
+    }
+    return Positioned(
+        bottom: 0,
+        width: cardWidth,
+        child: RaisedButton(
+            color: Color(0XFFeb4559),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18.0)),
+            onPressed: () {
+              setState(() {
+                setupStates(_isPairMode);
+              });
+            },
+            child: Text(
+              "Retry",
+              style: TextStyle(fontSize: 20.0),
+            )));
   }
 
   Widget displayFirstCardToStart(double cardWidth) {
@@ -185,7 +209,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void defineTypeOfNextCart(Offset globalPosition, double cardWith) {
-    if (globalPosition.dx < cardWith - cardWith * 0.20) {
+    if (globalPosition.dx > cardWith * 0.50) {
       return;
     }
 
