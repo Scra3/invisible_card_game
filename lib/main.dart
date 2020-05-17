@@ -60,16 +60,15 @@ class _MyHomePageState extends State<MyHomePage> {
           ]),
         ),
         body: Center(
-          child: Container(
-              height: MediaQuery.of(context).size.height,
-              width: cardWidth,
-              child: Stack(children: <Widget>[
-                ...generateDeckCardsForElevationEffect(cardWidth),
-                buildDeckWidget(cardWidth),
-                displayFlipCard(cardWidth),
-                displayFirstCardToStart(cardWidth)
-              ])),
-        ));
+            child: Container(
+          width: cardWidth,
+          child: Stack(children: <Widget>[
+            ...generateDeckCardsForElevationEffect(cardWidth),
+            buildDeckWidget(cardWidth),
+            displayFlipCard(cardWidth),
+            displayFirstCardToStart(cardWidth)
+          ]),
+        )));
   }
 
   Widget displayFirstCardToStart(double cardWidth) {
@@ -80,21 +79,27 @@ class _MyHomePageState extends State<MyHomePage> {
     return GestureDetector(
         onLongPress: () => toggleMode(),
         child: Stack(children: <Widget>[
-          Image(image: getWhiteCardImage(), width: cardWidth),
-          Container(
+          Image(image: _shuffledCards[0].getBackAssetImage(), width: cardWidth),
+          Positioned(
+              top: 197,
               width: cardWidth,
               child: Center(
-                  child: RaisedButton(
-                onPressed: () {
-                  setState(() {
-                    _isStartedCardDisplayed = false;
-                  });
-                },
-                child: Text(
-                  "Start",
-                  style: TextStyle(fontSize: 20.0),
-                ),
-              )))
+                  child: Container(
+                      width: cardWidth / 2,
+                      child: RaisedButton(
+                        color: Color(0XFFeb4559),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18.0)),
+                        onPressed: () {
+                          setState(() {
+                            _isStartedCardDisplayed = false;
+                          });
+                        },
+                        child: Text(
+                          "Start",
+                          style: TextStyle(fontSize: 20.0),
+                        ),
+                      ))))
         ]));
   }
 
@@ -161,12 +166,8 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  AssetImage getWhiteCardImage() {
-    return AssetImage('images/cards/white_card.png');
-  }
-
   List<Widget> generateDeckCardsForElevationEffect(double cardWidth) {
-    AssetImage cardImage = getWhiteCardImage();
+    AssetImage cardImage = AssetImage('images/cards/white_card.png');
 
     if (_isFlipCardDisplayed) {
       cardImage = _shuffledCards[1].getAssetImage();
