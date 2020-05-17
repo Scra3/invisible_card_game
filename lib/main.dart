@@ -9,7 +9,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData.dark(),
-      home: MyHomePage(title: 'Deck Card'),
+      home: MyHomePage(title: 'Deck of Cards'),
     );
   }
 }
@@ -62,6 +62,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         body: Center(
             child: Container(
+          height: MediaQuery.of(context).size.height,
           width: cardWidth,
           child: Stack(children: <Widget>[
             ...generateDeckCardsForElevationEffect(cardWidth),
@@ -74,9 +75,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget displayRestartButton(double cardWidth) {
-    if (_isStartedCardDisplayed) {
-      return Container();
-    }
     return Positioned(
         bottom: 0,
         width: cardWidth,
@@ -86,11 +84,15 @@ class _MyHomePageState extends State<MyHomePage> {
                 borderRadius: BorderRadius.circular(18.0)),
             onPressed: () {
               setState(() {
-                setupStates(_isPairMode);
+                if (_isStartedCardDisplayed) {
+                  _isStartedCardDisplayed = false;
+                } else {
+                  setupStates(_isPairMode);
+                }
               });
             },
             child: Text(
-              "Retry",
+              _isStartedCardDisplayed ? "Start" : "Retry",
               style: TextStyle(fontSize: 20.0),
             )));
   }
@@ -101,30 +103,10 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     return GestureDetector(
-        onLongPress: () => toggleMode(),
-        child: Stack(children: <Widget>[
+      onLongPress: () => toggleMode(),
+      child:
           Image(image: _shuffledCards[0].getBackAssetImage(), width: cardWidth),
-          Positioned(
-              top: 197,
-              width: cardWidth,
-              child: Center(
-                  child: Container(
-                      width: cardWidth / 2,
-                      child: RaisedButton(
-                        color: Color(0XFFeb4559),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18.0)),
-                        onPressed: () {
-                          setState(() {
-                            _isStartedCardDisplayed = false;
-                          });
-                        },
-                        child: Text(
-                          "Start",
-                          style: TextStyle(fontSize: 20.0),
-                        ),
-                      ))))
-        ]));
+    );
   }
 
   Widget displayFlipCard(double cardWidth) {
@@ -161,7 +143,8 @@ class _MyHomePageState extends State<MyHomePage> {
           },
           child: Draggable(
               child: Container(
-                child: getCurrentCard(),
+                // when whe are flipping card the current cars is showing, and we do not want this.
+                child: !_isFlipCardDisplayed ? getCurrentCard() : Container(),
                 width: cardWith,
               ),
               feedback: Container(
