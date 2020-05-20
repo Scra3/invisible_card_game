@@ -130,9 +130,7 @@ class _HomePageState extends State<HomePage> {
     // it uses to disable draggable cards
 
     if (!_isInvisibleCardRevealed) {
-      return Container(
-        width: cardWidth,
-      );
+      return Container();
     }
 
     return Positioned(
@@ -188,7 +186,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<Widget> generateDeckCardsForElevationEffectWidget(double cardWidth) {
-    AssetImage cardImage = _visibleCards[1].getAssetImage();
+    AssetImage cardImage = AssetImage('images/cards/white_card.png');
 
     if (_isInvisibleCardRevealed) {
       cardImage = _visibleCards[1].getAssetImage();
