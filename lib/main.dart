@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:invisiblecardgame/card.dart' as GameCard;
 import 'package:flip_card/flip_card.dart';
+import 'package:invisiblecardgame/deck_builder.dart';
 
 void main() => runApp(MyApp());
 
@@ -41,14 +42,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   void setupStates(bool isPairMode) {
+    DeckBuilder deckBuilder = DeckBuilder().forPairMode(isPairMode);
     setState(() {
       _isPairMode = isPairMode;
       _nextCardIsAssociatedCardOfCurrentCard = false;
       _isStartedCardDisplayed = true;
       _isFlipCardDisplayed = false;
       _isTutorialDisplayed = false;
-      _associatedCards = getAssociatedCards(GameCard.allCards, _isPairMode);
-      _shuffledCards = getDeck(GameCard.allCards, _isPairMode);
+      _associatedCards = deckBuilder.getInvisibleCards();
+      _shuffledCards = deckBuilder.getVisibleCards();
       _shuffledCards.shuffle();
     });
   }
@@ -285,38 +287,5 @@ class _HomePageState extends State<HomePage> {
 
   void toggleMode() {
     setupStates(!_isPairMode);
-  }
-
-  List<GameCard.Card> getDeck(List<GameCard.Card> cards, isPairMode) {
-    final int kingValue = 13;
-    if (isPairMode) {
-      List<GameCard.Card> redKings = [
-        GameCard.Card(kingValue, GameCard.D_CARD),
-        GameCard.Card(kingValue, GameCard.H_CARD)
-      ];
-
-      List<GameCard.Card> generatedDeck = cards
-          .where((card) => card.value % 2 == 0 && card.value != kingValue)
-          .toList();
-      generatedDeck.addAll(redKings);
-
-      return generatedDeck;
-    } else {
-      List<GameCard.Card> blackKings = [
-        GameCard.Card(kingValue, GameCard.S_CARD),
-        GameCard.Card(kingValue, GameCard.C_CARD)
-      ];
-
-      List<GameCard.Card> generatedDeck = cards
-          .where((card) => card.value % 2 != 0 && card.value != kingValue)
-          .toList();
-      generatedDeck.addAll(blackKings);
-      return generatedDeck;
-    }
-  }
-
-  List<GameCard.Card> getAssociatedCards(
-      List<GameCard.Card> cards, isPairMode) {
-    return getDeck(cards, !isPairMode);
   }
 }
