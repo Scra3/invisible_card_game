@@ -31,8 +31,7 @@ class _HomePageState extends State<HomePage> {
   List<GameCard.Card> _invisibleCards;
   bool _isPairMode = true;
   bool _isStartedCardDisplayed = true;
-  bool _isFlipCardDisplayed = false;
-  bool _nextCardIsAssociatedCardOfCurrentCard = false;
+  bool _isInvisibleCardRevealed = false;
   bool _isTutorialDisplayed = false;
 
   @override
@@ -45,9 +44,8 @@ class _HomePageState extends State<HomePage> {
     DeckBuilder deckBuilder = DeckBuilder().forPairMode(isPairMode);
     setState(() {
       _isPairMode = isPairMode;
-      _nextCardIsAssociatedCardOfCurrentCard = false;
       _isStartedCardDisplayed = true;
-      _isFlipCardDisplayed = false;
+      _isInvisibleCardRevealed = false;
       _isTutorialDisplayed = false;
       _invisibleCards = deckBuilder.getInvisibleCards();
       _visibleCards = deckBuilder.getVisibleCards();
@@ -131,7 +129,7 @@ class _HomePageState extends State<HomePage> {
   Widget buildFlipCardWidget(double cardWidth) {
     // it uses to disable draggable cards
 
-    if (!_isFlipCardDisplayed) {
+    if (!_isInvisibleCardRevealed) {
       return Container(
         width: cardWidth,
       );
@@ -154,48 +152,45 @@ class _HomePageState extends State<HomePage> {
 
   Widget buildDeckWidget(double cardWith) {
     if (_visibleCards.length == 1) {
-      return Container(child: getCurrentCard(), width: cardWith);
+      return Container(child: getCurrentCardImageWidget(), width: cardWith);
     } else {
       return GestureDetector(
           onVerticalDragDown: (DragDownDetails details) {
-            defineTypeOfNextCart(details.globalPosition, cardWith);
+            revealInvisibleCardIfTapsOnLeftSide(
+                details.globalPosition, cardWith);
           },
           child: Draggable(
               child: Container(
-                // when whe are flipping card the current cars is showing, and we do not want this.
-                child: !_isFlipCardDisplayed ? getCurrentCard() : Container(),
+                child: _isInvisibleCardRevealed
+                    ? Container()
+                    : getCurrentCardImageWidget(),
                 width: cardWith,
               ),
               feedback: Container(
-                child: getCurrentCardFeedback(),
+                child: getCurrentCardImageWidget(),
                 width: cardWith,
               ),
               childWhenDragging: Container(
-                child: getNextCard(),
+                child: getNextCardImageWidget(),
                 width: cardWith,
               ),
               onDragEnd: (drag) {
-                generateNextCard();
-                removeCurrentCard();
+                if (!_isInvisibleCardRevealed) {
+                  generateNextCard();
+                  removeCurrentCard();
+                }
               }));
     }
   }
 
   void removeCurrentCard() {
-    if (_nextCardIsAssociatedCardOfCurrentCard) {
-      return;
-    }
-
     _visibleCards.removeAt(0);
-    setState(() {
-      _visibleCards = _visibleCards;
-    });
   }
 
   List<Widget> generateDeckCardsForElevationEffectWidget(double cardWidth) {
-    AssetImage cardImage = AssetImage('images/cards/white_card.png');
+    AssetImage cardImage = _visibleCards[1].getAssetImage();
 
-    if (_isFlipCardDisplayed) {
+    if (_isInvisibleCardRevealed) {
       cardImage = _visibleCards[1].getAssetImage();
     }
 
@@ -210,50 +205,32 @@ class _HomePageState extends State<HomePage> {
         .toList();
   }
 
-  void defineTypeOfNextCart(Offset globalPosition, double cardWith) {
+  void revealInvisibleCardIfTapsOnLeftSide(
+      Offset globalPosition, double cardWith) {
     if (globalPosition.dx > cardWith * CARD_LEFT_RATIO) {
       return;
     }
 
-    displayOverlay();
-
     setState(() {
-      _nextCardIsAssociatedCardOfCurrentCard = true;
+      _isInvisibleCardRevealed = true;
     });
   }
 
-  Widget getCurrentCardFeedback() {
+  Widget getCurrentCardImageWidget() {
     return Image(
         image: _visibleCards[0].getAssetImage(), gaplessPlayback: true);
   }
 
-  void displayOverlay() {
-    setState(() {
-      _isFlipCardDisplayed = true;
-    });
-  }
-
-  Widget getCurrentCard() {
+  Widget getNextCardImageWidget() {
     return Image(
-        image: _visibleCards[0].getAssetImage(), gaplessPlayback: true);
+        image: _visibleCards[1].getAssetImage(), gaplessPlayback: true);
   }
 
-  Widget getNextCard() {
-    if (_nextCardIsAssociatedCardOfCurrentCard) {
-      return Image(
-          image: _visibleCards[0].getAssociatedCard().getBackAssetImage(),
-          gaplessPlayback: true);
-    } else {
-      return Image(
-          image: _visibleCards[1].getAssetImage(), gaplessPlayback: true);
-    }
+  void toggleMode() {
+    setupStates(!_isPairMode);
   }
 
   void generateNextCard() {
-    if (_nextCardIsAssociatedCardOfCurrentCard) {
-      return;
-    }
-
     // if next card is called it means that the associated card is not the the predicted card.
     // So, we can add it randomly in the first part of the deck between currentIndex + 1 and end of the first part.
     List<GameCard.Card> newShuffledCards = [
@@ -281,9 +258,5 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _visibleCards = newShuffledCards;
     });
-  }
-
-  void toggleMode() {
-    setupStates(!_isPairMode);
   }
 }
