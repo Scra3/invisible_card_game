@@ -1,9 +1,16 @@
+import 'dart:collection';
+
 import 'package:flutter/cupertino.dart';
 
 const C_CARD = 'C';
 const D_CARD = 'D';
 const S_CARD = 'S';
 const H_CARD = 'H';
+
+const KING_VALUE = 13;
+const QUEEN_VALUE = 12;
+const VALET_VALUE = 11;
+const AS_VALUE = 1;
 
 class Card {
   int value;
@@ -31,15 +38,15 @@ class Card {
 
   AssetImage getAssetImage() {
     String name;
-    if (value == 13) {
+    if (value == KING_VALUE) {
       name = buildName('K', color);
-    } else if (value == 12) {
+    } else if (value == QUEEN_VALUE) {
       name = buildName('Q', color);
-    } else if (value == 11) {
+    } else if (value == VALET_VALUE) {
       name = buildName('J', color);
-    } else if (value == 1) {
+    } else if (value == AS_VALUE) {
       name = buildName('A', color);
-    }  else {
+    } else {
       name = buildName(value.toString(), color);
     }
     return AssetImage('images/cards/$name.png');
