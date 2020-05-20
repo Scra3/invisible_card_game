@@ -27,8 +27,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<GameCard.Card> _shuffledCards = GameCard.allCards;
-  List<GameCard.Card> _associatedCards = GameCard.allCards;
+  List<GameCard.Card> _visibleCards;
+  List<GameCard.Card> _invisibleCards;
   bool _isPairMode = true;
   bool _isStartedCardDisplayed = true;
   bool _isFlipCardDisplayed = false;
@@ -49,9 +49,9 @@ class _HomePageState extends State<HomePage> {
       _isStartedCardDisplayed = true;
       _isFlipCardDisplayed = false;
       _isTutorialDisplayed = false;
-      _associatedCards = deckBuilder.getInvisibleCards();
-      _shuffledCards = deckBuilder.getVisibleCards();
-      _shuffledCards.shuffle();
+      _invisibleCards = deckBuilder.getInvisibleCards();
+      _visibleCards = deckBuilder.getVisibleCards();
+      _visibleCards.shuffle();
     });
   }
 
@@ -122,9 +122,9 @@ class _HomePageState extends State<HomePage> {
     }
 
     return GestureDetector(
-      onLongPress: () => toggleMode(),
+      onTap: () => toggleMode(),
       child:
-          Image(image: _shuffledCards[0].getBackAssetImage(), width: cardWidth),
+          Image(image: _visibleCards[0].getBackAssetImage(), width: cardWidth),
     );
   }
 
@@ -143,17 +143,17 @@ class _HomePageState extends State<HomePage> {
         direction: FlipDirection.HORIZONTAL,
         front: Image(
             gaplessPlayback: true,
-            image: _shuffledCards[0].getAssociatedCard().getBackAssetImage()),
+            image: _visibleCards[0].getAssociatedCard().getBackAssetImage()),
         back: Image(
           gaplessPlayback: true,
-          image: _shuffledCards[0].getAssociatedCard().getAssetImage(),
+          image: _visibleCards[0].getAssociatedCard().getAssetImage(),
         ),
       ),
     );
   }
 
   Widget buildDeckWidget(double cardWith) {
-    if (_shuffledCards.length == 1) {
+    if (_visibleCards.length == 1) {
       return Container(child: getCurrentCard(), width: cardWith);
     } else {
       return GestureDetector(
@@ -186,9 +186,9 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    _shuffledCards.removeAt(0);
+    _visibleCards.removeAt(0);
     setState(() {
-      _shuffledCards = _shuffledCards;
+      _visibleCards = _visibleCards;
     });
   }
 
@@ -196,7 +196,7 @@ class _HomePageState extends State<HomePage> {
     AssetImage cardImage = AssetImage('images/cards/white_card.png');
 
     if (_isFlipCardDisplayed) {
-      cardImage = _shuffledCards[1].getAssetImage();
+      cardImage = _visibleCards[1].getAssetImage();
     }
 
     return [5.0, 10.0, 15.0, 20.0, 25.0]
@@ -224,7 +224,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget getCurrentCardFeedback() {
     return Image(
-        image: _shuffledCards[0].getAssetImage(), gaplessPlayback: true);
+        image: _visibleCards[0].getAssetImage(), gaplessPlayback: true);
   }
 
   void displayOverlay() {
@@ -235,17 +235,17 @@ class _HomePageState extends State<HomePage> {
 
   Widget getCurrentCard() {
     return Image(
-        image: _shuffledCards[0].getAssetImage(), gaplessPlayback: true);
+        image: _visibleCards[0].getAssetImage(), gaplessPlayback: true);
   }
 
   Widget getNextCard() {
     if (_nextCardIsAssociatedCardOfCurrentCard) {
       return Image(
-          image: _shuffledCards[0].getAssociatedCard().getBackAssetImage(),
+          image: _visibleCards[0].getAssociatedCard().getBackAssetImage(),
           gaplessPlayback: true);
     } else {
       return Image(
-          image: _shuffledCards[1].getAssetImage(), gaplessPlayback: true);
+          image: _visibleCards[1].getAssetImage(), gaplessPlayback: true);
     }
   }
 
@@ -257,31 +257,29 @@ class _HomePageState extends State<HomePage> {
     // if next card is called it means that the associated card is not the the predicted card.
     // So, we can add it randomly in the first part of the deck between currentIndex + 1 and end of the first part.
     List<GameCard.Card> newShuffledCards = [
-      _shuffledCards.first,
-      _shuffledCards[1]
+      _visibleCards.first,
+      _visibleCards[1]
     ];
 
     List<GameCard.Card> cardRemainToBeSeen =
-        _shuffledCards.getRange(2, _shuffledCards.length).toList();
-    GameCard.Card associatedCard = _associatedCards.firstWhere(
+        _visibleCards.getRange(2, _visibleCards.length).toList();
+    GameCard.Card associatedCard = _invisibleCards.firstWhere(
         (card) =>
-            card.getName() ==
-            _shuffledCards.first.getAssociatedCard().getName(),
+            card.getName() == _visibleCards.first.getAssociatedCard().getName(),
         orElse: () => null);
 
     if (associatedCard != null) {
       cardRemainToBeSeen.add(associatedCard);
-      _associatedCards.removeWhere(
+      _invisibleCards.removeWhere(
         (card) =>
-            card.getName() ==
-            _shuffledCards.first.getAssociatedCard().getName(),
+            card.getName() == _visibleCards.first.getAssociatedCard().getName(),
       );
     }
     cardRemainToBeSeen.shuffle();
     newShuffledCards.addAll(cardRemainToBeSeen);
 
     setState(() {
-      _shuffledCards = newShuffledCards;
+      _visibleCards = newShuffledCards;
     });
   }
 
