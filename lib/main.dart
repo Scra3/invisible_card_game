@@ -174,15 +174,13 @@ class _HomePageState extends State<HomePage> {
               ),
               onDragEnd: (drag) {
                 if (!_isInvisibleCardRevealed) {
-                  generateNextCard();
-                  removeCurrentCard();
+                  setState(() {
+                    _visibleCards = DeckBuilder.generatedNextVisibleCards(
+                        _visibleCards, _invisibleCards);
+                  });
                 }
               }));
     }
-  }
-
-  void removeCurrentCard() {
-    _visibleCards.removeAt(0);
   }
 
   List<Widget> generateDeckCardsForElevationEffectWidget(double cardWidth) {
@@ -226,35 +224,5 @@ class _HomePageState extends State<HomePage> {
 
   void toggleMode() {
     setupStates(!_isPairMode);
-  }
-
-  void generateNextCard() {
-    // if next card is called it means that the associated card is not the the predicted card.
-    // So, we can add it randomly in the first part of the deck between currentIndex + 1 and end of the first part.
-    List<GameCard.Card> newShuffledCards = [
-      _visibleCards.first,
-      _visibleCards[1]
-    ];
-
-    List<GameCard.Card> cardRemainToBeSeen =
-        _visibleCards.getRange(2, _visibleCards.length).toList();
-    GameCard.Card associatedCard = _invisibleCards.firstWhere(
-        (card) =>
-            card.getName() == _visibleCards.first.getAssociatedCard().getName(),
-        orElse: () => null);
-
-    if (associatedCard != null) {
-      cardRemainToBeSeen.add(associatedCard);
-      _invisibleCards.removeWhere(
-        (card) =>
-            card.getName() == _visibleCards.first.getAssociatedCard().getName(),
-      );
-    }
-    cardRemainToBeSeen.shuffle();
-    newShuffledCards.addAll(cardRemainToBeSeen);
-
-    setState(() {
-      _visibleCards = newShuffledCards;
-    });
   }
 }

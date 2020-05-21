@@ -1,3 +1,4 @@
+import 'package:invisiblecardgame/card.dart';
 import 'package:test/test.dart';
 import 'package:invisiblecardgame/deck_builder.dart';
 
@@ -30,7 +31,6 @@ void main() {
     });
   });
 
-
   group('with odd mode', () {
     DeckBuilder deck;
 
@@ -56,6 +56,66 @@ void main() {
           .forEach((card) => cards.add(card.getName()));
 
       expect(cards.length, 52);
+    });
+  });
+
+  group('generate next deck', () {
+    DeckBuilder deck;
+    List<Card> visibleCards;
+    List<Card> invisibleCards;
+
+    setUp(() {
+      deck = DeckBuilder().forPairMode(true);
+      visibleCards = deck.getVisibleCards();
+      invisibleCards = deck.getInvisibleCards();
+    });
+
+    test('generates the next current card', () {
+      Card nextCurrentCard = visibleCards[1];
+
+      List<Card> generatedNextCards =
+          DeckBuilder.generatedNextVisibleCards(visibleCards, invisibleCards);
+
+      expect(generatedNextCards.first, nextCurrentCard);
+    });
+
+    test('adds to the deck the associated card to the removed card', () {
+      Card expectedAssociatedCard = visibleCards.first.getAssociatedCard();
+
+      Card card = visibleCards.firstWhere(
+          (card) => card.getName() == expectedAssociatedCard.getName(),
+          orElse: () => null);
+      expect(card, null);
+
+      List<Card> generatedNextVisibleCards =
+          DeckBuilder.generatedNextVisibleCards(visibleCards, invisibleCards);
+
+      card = generatedNextVisibleCards.firstWhere(
+          (card) => card.getName() == expectedAssociatedCard.getName(),
+          orElse: () => null);
+
+      expect(card.getName(), expectedAssociatedCard.getName());
+    });
+
+    test(
+        'does not add to the deck the associated card to the removed card if the card is already an associated card',
+        () {
+      visibleCards.first = visibleCards.first.getAssociatedCard();
+      Card expectedAssociatedCard = visibleCards.first.getAssociatedCard();
+
+      Card card = visibleCards.firstWhere(
+          (card) => card.getName() == expectedAssociatedCard.getName(),
+          orElse: () => null);
+      expect(card, null);
+
+      List<Card> generatedNextVisibleCards =
+          DeckBuilder.generatedNextVisibleCards(visibleCards, invisibleCards);
+
+      card = generatedNextVisibleCards.firstWhere(
+          (card) => card.getName() == expectedAssociatedCard.getName(),
+          orElse: () => null);
+
+      expect(card, null);
     });
   });
 }

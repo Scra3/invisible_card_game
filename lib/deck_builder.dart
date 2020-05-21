@@ -41,4 +41,25 @@ class DeckBuilder {
 
     return generatedDeck;
   }
+
+  static List<Card> generatedNextVisibleCards(
+      List<Card> visibleCards, List<Card> invisibleCards) {
+    List<Card> nextVisibleCards = [visibleCards[1]];
+
+    List<Card> cardRemainToBeSeen =
+        visibleCards.getRange(1, visibleCards.length).toList();
+    Card associatedCard = invisibleCards.firstWhere(
+        (card) =>
+            card.getName() == visibleCards.first.getAssociatedCard().getName(),
+        orElse: () => null);
+
+    if (associatedCard != null) {
+      cardRemainToBeSeen.add(associatedCard);
+    }
+
+    cardRemainToBeSeen.shuffle();
+    nextVisibleCards.addAll(cardRemainToBeSeen);
+
+    return nextVisibleCards;
+  }
 }
