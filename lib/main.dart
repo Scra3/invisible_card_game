@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:invisiblecardgame/card.dart' as GameCard;
 import 'package:flip_card/flip_card.dart';
 import 'package:invisiblecardgame/deck_builder.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() => runApp(MyApp());
 
@@ -12,7 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData.dark(),
-      home: HomePage(title: 'Deck of Cards'),
+      home: HomePage(title: 'Deck'),
     );
   }
 }
@@ -67,9 +68,9 @@ class _HomePageState extends State<HomePage> {
                   Text(_isPairMode ? '' : '.')
                 ]),
                 IconButton(
-                  icon: Icon(Icons.help),
-                  tooltip: 'Increase volume by 10',
+                  icon: Image(image: AssetImage("images/explanations.png")),
                   onPressed: () {
+                    openRules();
                     setState(() {
                       _isTutorialDisplayed = !_isTutorialDisplayed;
                     });
@@ -86,17 +87,21 @@ class _HomePageState extends State<HomePage> {
             buildDeckWidget(cardWidth),
             buildFlipCardWidget(cardWidth),
             buildFirstCardToStartWidget(cardWidth),
-            buildRestartStartButtonWidget(cardWidth),
+            buildRestartStartButtonWidget(cardWidth, context),
           ]),
         )));
   }
 
-  Widget buildRestartStartButtonWidget(double cardWidth) {
+  Widget buildRestartStartButtonWidget(double cardWidth, BuildContext context) {
+    if (!_isInvisibleCardRevealed && !_isStartedCardDisplayed) {
+      return Container();
+    }
+
     return Positioned(
         bottom: 0,
         width: cardWidth,
         child: RaisedButton(
-            color: Color(0XFF30475e),
+            color: Theme.of(context).primaryColor,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(18.0)),
             onPressed: () {
@@ -108,10 +113,20 @@ class _HomePageState extends State<HomePage> {
                 }
               });
             },
-            child: Text(
-              _isStartedCardDisplayed ? "Start" : "Retry",
-              style: TextStyle(fontSize: 20.0),
-            )));
+            child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Padding(
+                      padding: EdgeInsets.only(right: 16.0),
+                      child: Text(
+                        _isStartedCardDisplayed ? "Start" : "Retry",
+                        style: TextStyle(fontSize: 20.0),
+                      )),
+                  Image(
+                    image: AssetImage("images/app_icon.png"),
+                    width: 25,
+                  )
+                ])));
   }
 
   Widget buildFirstCardToStartWidget(double cardWidth) {
@@ -224,5 +239,14 @@ class _HomePageState extends State<HomePage> {
 
   void toggleMode() {
     setupStates(!_isPairMode);
+  }
+
+  openRules() async {
+    const url = 'https://raw.githubusercontent.com/Scra3/invisible_deck_explanation/master/rules.png';
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 }

@@ -20,6 +20,7 @@ dependencies:
   flutter:
     sdk: flutter
   flip_card: ^0.4.4
+  url_launcher: ^5.4.7
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -43,10 +44,9 @@ flutter_icons:
 # configure splash scree
 # run to update splash screen: flutter pub pub run flutter_native_splash:create
 flutter_native_splash:
-  image: "images/app_icon.png"
+  image: "images/splash_icon.png"
   color: "121212"
   ios: false
-  fill: true
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -62,7 +62,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - images/cards/
-    - images/app_icon.png
+    - images/
   #  - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
