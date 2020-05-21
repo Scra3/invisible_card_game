@@ -95,6 +95,7 @@ void main() {
           orElse: () => null);
 
       expect(card.getName(), expectedAssociatedCard.getName());
+      expect(generatedNextVisibleCards.length, 26);
     });
 
     test(
@@ -116,6 +117,7 @@ void main() {
           orElse: () => null);
 
       expect(card, null);
+      expect(generatedNextVisibleCards.length, 25);
     });
   });
 }

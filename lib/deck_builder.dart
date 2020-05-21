@@ -47,7 +47,7 @@ class DeckBuilder {
     List<Card> nextVisibleCards = [visibleCards[1]];
 
     List<Card> cardRemainToBeSeen =
-        visibleCards.getRange(1, visibleCards.length).toList();
+        visibleCards.getRange(2, visibleCards.length).toList();
     Card associatedCard = invisibleCards.firstWhere(
         (card) =>
             card.getName() == visibleCards.first.getAssociatedCard().getName(),
