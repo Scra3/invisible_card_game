@@ -33,7 +33,6 @@ class _HomePageState extends State<HomePage> {
   bool _isPairMode = true;
   bool _isStartedCardDisplayed = true;
   bool _isInvisibleCardRevealed = false;
-  bool _isTutorialDisplayed = false;
 
   @override
   void initState() {
@@ -47,7 +46,6 @@ class _HomePageState extends State<HomePage> {
       _isPairMode = isPairMode;
       _isStartedCardDisplayed = true;
       _isInvisibleCardRevealed = false;
-      _isTutorialDisplayed = false;
       _invisibleCards = deckBuilder.getInvisibleCards();
       _visibleCards = deckBuilder.getVisibleCards();
       _visibleCards.shuffle();
@@ -71,9 +69,6 @@ class _HomePageState extends State<HomePage> {
                   icon: Icon(Icons.help),
                   onPressed: () {
                     openRules();
-                    setState(() {
-                      _isTutorialDisplayed = !_isTutorialDisplayed;
-                    });
                   },
                 ),
               ]),
