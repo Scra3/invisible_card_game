@@ -82,18 +82,26 @@ class _HomePageState extends State<HomePage> {
             buildDeckWidget(cardWidth),
             buildFlipCardWidget(cardWidth),
             buildFirstCardToStartWidget(cardWidth),
-            buildRestartStartButtonWidget(cardWidth, context),
+            buildActionButtonWidget(cardWidth, context),
           ]),
         )));
   }
 
-  Widget buildRestartStartButtonWidget(double cardWidth, BuildContext context) {
-    if (!_isInvisibleCardRevealed && !_isStartedCardDisplayed) {
+  bool isTrickIsEnded() {
+    return !_isInvisibleCardRevealed && !_isStartedCardDisplayed;
+  }
+
+  bool isDeckHasOneCard() {
+    return _visibleCards.length == 1;
+  }
+
+  Widget buildActionButtonWidget(double cardWidth, BuildContext context) {
+    if (!isTrickIsEnded() || !isDeckHasOneCard()) {
       return Container();
     }
 
     return Positioned(
-        bottom: 0,
+        bottom: 5,
         width: cardWidth,
         child: RaisedButton(
             color: Theme.of(context).primaryColor,
@@ -237,7 +245,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   openRules() async {
-    const url = 'https://raw.githubusercontent.com/Scra3/invisible_deck_explanation/master/rules.png';
+    const url =
+        'https://raw.githubusercontent.com/Scra3/invisible_deck_explanation/master/rules.png';
     if (await canLaunch(url)) {
       await launch(url);
     } else {
