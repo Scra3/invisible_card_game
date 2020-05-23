@@ -78,7 +78,7 @@ class _HomePageState extends State<HomePage> {
           height: MediaQuery.of(context).size.height,
           width: cardWidth,
           child: Stack(children: <Widget>[
-            ...generateDeckCardsForElevationEffectWidget(cardWidth),
+            ...generateDeckForElevationEffectWidget(cardWidth),
             buildDeckWidget(cardWidth),
             buildFlipCardWidget(cardWidth),
             buildFirstCardToStartWidget(cardWidth),
@@ -172,7 +172,7 @@ class _HomePageState extends State<HomePage> {
     } else {
       return GestureDetector(
           onVerticalDragDown: (DragDownDetails details) {
-            revealInvisibleCardIfTapsOnLeftSide(
+            revealInvisibleCardIfTapedOnLeftSide(
                 details.globalPosition, cardWith);
           },
           child: Draggable(
@@ -201,7 +201,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  List<Widget> generateDeckCardsForElevationEffectWidget(double cardWidth) {
+  List<Widget> generateDeckForElevationEffectWidget(double cardWidth) {
     AssetImage cardImage = AssetImage('images/cards/white_card.png');
 
     if (_isInvisibleCardRevealed) {
@@ -219,7 +219,7 @@ class _HomePageState extends State<HomePage> {
         .toList();
   }
 
-  void revealInvisibleCardIfTapsOnLeftSide(
+  void revealInvisibleCardIfTapedOnLeftSide(
       Offset globalPosition, double cardWith) {
     if (globalPosition.dx > cardWith * CARD_LEFT_RATIO) {
       return;
