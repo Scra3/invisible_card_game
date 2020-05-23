@@ -68,7 +68,7 @@ class _HomePageState extends State<HomePage> {
                   Text(_isPairMode ? '' : '.')
                 ]),
                 IconButton(
-                  icon: Image(image: AssetImage("images/explanations.png")),
+                  icon: Icon(Icons.help),
                   onPressed: () {
                     openRules();
                     setState(() {
