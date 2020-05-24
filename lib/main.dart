@@ -58,20 +58,7 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
         appBar: AppBar(
-          title: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Row(children: <Widget>[
-                  Text(widget.title),
-                  Text(_isPairMode ? '' : '.')
-                ]),
-                IconButton(
-                  icon: Icon(Icons.help),
-                  onPressed: () {
-                    openRules();
-                  },
-                ),
-              ]),
+          title: buildTitleWidget(),
         ),
         body: Center(
             child: Container(
@@ -85,6 +72,19 @@ class _HomePageState extends State<HomePage> {
             buildActionButtonWidget(cardWidth, context),
           ]),
         )));
+  }
+
+  Widget buildTitleWidget() {
+    return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: <
+        Widget>[
+      Row(children: <Widget>[Text(widget.title), Text(_isPairMode ? '' : '.')]),
+      IconButton(
+        icon: Icon(Icons.help),
+        onPressed: () {
+          openRules();
+        },
+      ),
+    ]);
   }
 
   bool isTrickIsEnded() {
