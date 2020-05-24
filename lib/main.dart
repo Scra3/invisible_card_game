@@ -88,7 +88,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   bool isTrickIsEnded() {
-    return !_isInvisibleCardRevealed && !_isStartedCardDisplayed;
+    return _isInvisibleCardRevealed || _isStartedCardDisplayed;
   }
 
   bool isDeckHasOneCard() {
@@ -96,7 +96,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget buildActionButtonWidget(double cardWidth, BuildContext context) {
-    if (!isTrickIsEnded() || !isDeckHasOneCard()) {
+    if (!isTrickIsEnded() && !isDeckHasOneCard()) {
       return Container();
     }
 
