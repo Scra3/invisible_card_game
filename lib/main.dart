@@ -6,6 +6,8 @@ import 'package:invisiblecardgame/constants.dart';
 import 'package:invisiblecardgame/deck_builder.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:admob_flutter/admob_flutter.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:launch_review/launch_review.dart';
 
 void main() => runApp(MyApp());
 
@@ -76,7 +78,7 @@ class _HomePageState extends State<HomePage>
     _interstitialAd.load();
 
     _adTimer = Timer.periodic(Duration(milliseconds: 500), (Timer t) async {
-      if (_isLoadingAd == true &&  await _interstitialAd.isLoaded) {
+      if (_isLoadingAd == true && await _interstitialAd.isLoaded) {
         _interstitialAd.show();
       }
     });
@@ -138,6 +140,25 @@ class _HomePageState extends State<HomePage>
           navigateToRulesWebsite();
         },
       ),
+      RatingBar(
+        initialRating: 3,
+        minRating: 1,
+        direction: Axis.horizontal,
+        allowHalfRating: false,
+        unratedColor: Colors.amber.withAlpha(50),
+        itemCount: 5,
+        itemSize: 25.0,
+        itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
+        itemBuilder: (context, _) => Icon(
+          Icons.star,
+          color: Colors.amber,
+        ),
+        onRatingUpdate: (rating) {
+          if (rating > 3) {
+            LaunchReview.launch(androidAppId: APP_ID);
+          }
+        },
+      )
     ]);
   }
 
