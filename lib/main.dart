@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:invisiblecardgame/card.dart' as GameCard;
 import 'package:flip_card/flip_card.dart';
+import 'package:invisiblecardgame/constants.dart';
 import 'package:invisiblecardgame/deck_builder.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:admob_flutter/admob_flutter.dart';
 
 void main() => runApp(MyApp());
 
@@ -27,17 +30,56 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
+  AdmobInterstitial _interstitialAd;
+  GlobalKey<ScaffoldState> _scaffoldState = GlobalKey();
+  bool _isLoadingAd = true;
+  Timer _adTimer;
+
   List<GameCard.Card> _visibleCards;
   List<GameCard.Card> _invisibleCards;
   bool _isPairMode = true;
   bool _isStartedCardDisplayed = true;
   bool _isInvisibleCardRevealed = false;
 
+  AnimationController _spinnerController;
+
   @override
   void initState() {
     super.initState();
+
+    _spinnerController = AnimationController(
+      duration: const Duration(milliseconds: 5000),
+      vsync: this,
+    );
+    _spinnerController.forward();
+
     setupStates(true);
+
+    loadAd();
+  }
+
+  void loadAd() async {
+    _interstitialAd = AdmobInterstitial(
+      adUnitId: INTERSTITIAL_ID,
+      listener: (AdmobAdEvent event, Map<String, dynamic> args) {
+        if (event == AdmobAdEvent.closed) {
+          _adTimer.cancel();
+          setState(() {
+            _isLoadingAd = false;
+          });
+        }
+      },
+    );
+
+    _interstitialAd.load();
+
+    _adTimer = Timer.periodic(Duration(milliseconds: 500), (Timer t) async {
+      if (_isLoadingAd == true &&  await _interstitialAd.isLoaded) {
+        _interstitialAd.show();
+      }
+    });
   }
 
   void setupStates(bool isPairMode) {
@@ -57,6 +99,7 @@ class _HomePageState extends State<HomePage> {
     final double cardWidth = MediaQuery.of(context).size.width * 0.8;
 
     return Scaffold(
+        key: _scaffoldState,
         appBar: AppBar(
           title: buildTitleWidget(),
         ),
@@ -64,14 +107,25 @@ class _HomePageState extends State<HomePage> {
             child: Container(
           height: MediaQuery.of(context).size.height,
           width: cardWidth,
-          child: Stack(children: <Widget>[
-            ...generateDeckForElevationEffectWidget(cardWidth),
-            buildDeckWidget(cardWidth),
-            buildFlipCardWidget(cardWidth),
-            buildFirstCardToStartWidget(cardWidth),
-            buildActionButtonWidget(cardWidth, context),
-          ]),
+          child: _isLoadingAd
+              ? buildLoadingWidget()
+              : Stack(children: <Widget>[
+                  ...generateDeckForElevationEffectWidget(cardWidth),
+                  buildDeckWidget(cardWidth),
+                  buildFlipCardWidget(cardWidth),
+                  buildFirstCardToStartWidget(cardWidth),
+                  buildActionButtonWidget(cardWidth, context),
+                ]),
         )));
+  }
+
+  Widget buildLoadingWidget() {
+    return RotationTransition(
+      turns: Tween(begin: 0.0, end: 1.0).animate(_spinnerController),
+      child: Image(
+        image: AssetImage("images/splash_icon.png"),
+      ),
+    );
   }
 
   Widget buildTitleWidget() {
@@ -81,22 +135,22 @@ class _HomePageState extends State<HomePage> {
       IconButton(
         icon: Icon(Icons.help),
         onPressed: () {
-          openRules();
+          navigateToRulesWebsite();
         },
       ),
     ]);
   }
 
-  bool isTrickIsEnded() {
+  bool get isTrickEnded {
     return _isInvisibleCardRevealed || _isStartedCardDisplayed;
   }
 
-  bool isDeckHasOneCard() {
+  bool get isLastCard {
     return _visibleCards.length == 1;
   }
 
   Widget buildActionButtonWidget(double cardWidth, BuildContext context) {
-    if (!isTrickIsEnded() && !isDeckHasOneCard()) {
+    if (!isTrickEnded && !isLastCard) {
       return Container();
     }
 
@@ -244,7 +298,7 @@ class _HomePageState extends State<HomePage> {
     setupStates(!_isPairMode);
   }
 
-  openRules() async {
+  navigateToRulesWebsite() async {
     const url =
         'https://raw.githubusercontent.com/Scra3/invisible_deck_explanation/master/rules.png';
     if (await canLaunch(url)) {
