@@ -12,6 +12,7 @@ import 'package:launch_review/launch_review.dart';
 void main() => runApp(MyApp());
 
 const double CARD_LEFT_RATIO = 0.4;
+const int MAX_WAITING_TIME_AD_IN_MS = 5000;
 
 class MyApp extends StatelessWidget {
   @override
@@ -37,7 +38,8 @@ class _HomePageState extends State<HomePage>
   AdmobInterstitial _interstitialAd;
   GlobalKey<ScaffoldState> _scaffoldState = GlobalKey();
   bool _isLoadingAd = true;
-  Timer _adTimer;
+  Timer _adTimerPeriodic;
+  int _totalLoadingTimeAd = 0;
 
   List<GameCard.Card> _visibleCards;
   List<GameCard.Card> _invisibleCards;
@@ -45,21 +47,13 @@ class _HomePageState extends State<HomePage>
   bool _isStartedCardDisplayed = true;
   bool _isInvisibleCardRevealed = false;
 
-  AnimationController _spinnerController;
-
   @override
   void initState() {
     super.initState();
-
-    _spinnerController = AnimationController(
-      duration: const Duration(milliseconds: 5000),
-      vsync: this,
-    );
-    _spinnerController.forward();
-
     setupStates(true);
 
     loadAd();
+    tryPeriodicallyToDisplayAd();
   }
 
   void loadAd() async {
@@ -67,7 +61,6 @@ class _HomePageState extends State<HomePage>
       adUnitId: INTERSTITIAL_ID,
       listener: (AdmobAdEvent event, Map<String, dynamic> args) {
         if (event == AdmobAdEvent.closed) {
-          _adTimer.cancel();
           setState(() {
             _isLoadingAd = false;
           });
@@ -76,10 +69,23 @@ class _HomePageState extends State<HomePage>
     );
 
     _interstitialAd.load();
+  }
 
-    _adTimer = Timer.periodic(Duration(milliseconds: 500), (Timer t) async {
-      if (_isLoadingAd == true && await _interstitialAd.isLoaded) {
+  tryPeriodicallyToDisplayAd() {
+    const waitingTimeInMs = 300;
+    _adTimerPeriodic = Timer.periodic(Duration(milliseconds: waitingTimeInMs),
+        (Timer t) async {
+      setState(() {
+        _totalLoadingTimeAd = _totalLoadingTimeAd + waitingTimeInMs;
+      });
+      if (await _interstitialAd.isLoaded) {
         _interstitialAd.show();
+        _adTimerPeriodic.cancel();
+      } else if (_totalLoadingTimeAd >= MAX_WAITING_TIME_AD_IN_MS) {
+        _adTimerPeriodic.cancel();
+        setState(() {
+          _isLoadingAd = false;
+        });
       }
     });
   }
@@ -122,12 +128,9 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget buildLoadingWidget() {
-    return RotationTransition(
-      turns: Tween(begin: 0.0, end: 1.0).animate(_spinnerController),
-      child: Image(
-        image: AssetImage("images/splash_icon.png"),
-      ),
-    );
+    return Center(
+        child: CircularProgressIndicator(
+            value: _totalLoadingTimeAd / MAX_WAITING_TIME_AD_IN_MS));
   }
 
   Widget buildTitleWidget() {
