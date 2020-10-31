@@ -320,12 +320,10 @@ class _HomePageState extends State<HomePage>
   }
 
   navigateToRulesWebsite() async {
-    const url =
-        'https://raw.githubusercontent.com/Scra3/invisible_deck_explanation/master/rules.png';
-    if (await canLaunch(url)) {
-      await launch(url);
+    if (await canLaunch(RULES_URL)) {
+      await launch(RULES_URL);
     } else {
-      throw 'Could not launch $url';
+      throw 'Could not launch $RULES_URL';
     }
   }
 }
