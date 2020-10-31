@@ -33,7 +33,7 @@ class Card {
   }
 
   AssetImage getBackAssetImage() {
-    return AssetImage('images/cards/gray_back.png');
+    return AssetImage('images/cards/back.png');
   }
 
   AssetImage getAssetImage() {

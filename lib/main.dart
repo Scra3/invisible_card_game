@@ -280,7 +280,7 @@ class _HomePageState extends State<HomePage>
   }
 
   List<Widget> generateDeckForElevationEffectWidget(double cardWidth) {
-    AssetImage cardImage = AssetImage('images/cards/white_card.png');
+    AssetImage cardImage = AssetImage('images/cards/back.png');
 
     if (_isInvisibleCardRevealed) {
       cardImage = _visibleCards[1].getAssetImage();
