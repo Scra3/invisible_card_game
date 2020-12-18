@@ -12,12 +12,13 @@ import 'package:launch_review/launch_review.dart';
 void main() => runApp(MyApp());
 
 const double CARD_LEFT_RATIO = 0.4;
-const int MAX_WAITING_TIME_AD_IN_MS = 5000;
+const int MAX_WAITING_TIME_AD_IN_MS = 10000;
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(),
       home: HomePage(title: 'Deck'),
     );
